@@ -1,5 +1,5 @@
 import { convertImports } from "./parsing.js"
-import { isValidIdentifier } from "https://deno.land/x/good@1.13.1.0/flattened/is_valid_identifier.js"
+import { isValidIdentifier } from "https://esm.sh/gh/jeff-hykin/good-js@1.13.1.0/source/flattened/is_valid_identifier.js"
 
 const builtins = {
     "console": {
@@ -19,7 +19,7 @@ const builtins = {
     ...globalThis,
 }
 
-export const makeRuntime = ({ randomSeed, }) => {
+export const makeRuntime = ({ randomSeed, }={}) => {
     const runtime = {...builtins}
     runtime.globalThis = runtime
     return runtime

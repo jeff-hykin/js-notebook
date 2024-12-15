@@ -1,7 +1,7 @@
-import { parserFromWasm, xmlStylePreview } from "https://deno.land/x/deno_tree_sitter@0.2.6.0/main.js"
-// import { parserFromWasm, xmlStylePreview } from "/Users/jeffhykin/repos/deno-tree-sitter/main.js"
-import javascript from "https://github.com/jeff-hykin/common_tree_sitter_languages/raw/4d8a6d34d7f6263ff570f333cdcf5ded6be89e3d/main/javascript.js"
-import { capitalize, indent, toCamelCase, digitsToEnglishArray, toPascalCase, toKebabCase, toSnakeCase, toScreamingKebabCase, toScreamingSnakeCase, toRepresentation, toString, regex, findAll, iterativelyFindAll, escapeRegexMatch, escapeRegexReplace, extractFirst, isValidIdentifier, removeCommonPrefix } from "https://deno.land/x/good@1.13.0.1/string.js"
+import { parserFromWasm, xmlStylePreview } from "https://esm.sh/gh/jeff-hykin/deno-tree-sitter@0.2.8.4/main.js"
+import javascript from "https://esm.sh/gh/jeff-hykin/common_tree_sitter_languages@1.3.1.1/main/javascript.js"
+// import { capitalize, indent, toCamelCase, digitsToEnglishArray, toPascalCase, toKebabCase, toSnakeCase, toScreamingKebabCase, toScreamingSnakeCase, toRepresentation, toString, regex, findAll, iterativelyFindAll, escapeRegexMatch, escapeRegexReplace, extractFirst, isValidIdentifier, removeCommonPrefix } from "https://esm.sh/gh/jeff-hykin/good-js@1.13.2.0/source/string.js"
+
 
 const parser = await parserFromWasm(javascript) // path or Uint8Array
 

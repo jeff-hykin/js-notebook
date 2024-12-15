@@ -5,7 +5,8 @@ import { fadeIn, fadeOut } from "https://esm.sh/gh/jeff-hykin/good-component@0.3
 import { showToast } from "https://esm.sh/gh/jeff-hykin/good-component@0.3.0/main/actions.js"
 import { addDynamicStyleFlags, setupStyles, createCssClass, setupClassStyles, hoverStyleHelper, combineClasses, mergeStyles, AfterSilent, removeAllChildElements } from "https://esm.sh/gh/jeff-hykin/good-component@0.3.0/main/helpers.js"
 import { zip, enumerate, count, permute, combinations, wrapAroundGet } from "https://esm.sh/gh/jeff-hykin/good-js@1.5.1.0/source/array.js"
-import { deepCopy, deepCopySymbol, allKeyDescriptions, deepSortObject, shallowSortObject, isGeneratorObject,isAsyncIterable, isSyncIterable, isIterableTechnically, isSyncIterableObjectOrContainer, allKeys } from "https://deno.land/x/good@1.13.2.0/value.js"
+// import { deepCopy, deepCopySymbol, allKeyDescriptions, deepSortObject, shallowSortObject, isGeneratorObject,isAsyncIterable, isSyncIterable, isIterableTechnically, isSyncIterableObjectOrContainer, allKeys } from "https://deno.land/x/good@1.13.2.0/value.js"
+import { deepCopy, deepCopySymbol, allKeyDescriptions, deepSortObject, shallowSortObject, isGeneratorObject,isAsyncIterable, isSyncIterable, isIterableTechnically, isSyncIterableObjectOrContainer, allKeys } from "https://esm.sh/gh/jeff-hykin/good-js@1.13.2.0/source/value.js"
 import { dump, load } from "https://esm.sh/js-yaml@4.1.0/"
 const yaml = { stringify: dump, parse: load }
 
@@ -21,6 +22,9 @@ const { javascript } = CM["@codemirror/lang-javascript"]
 const { tags: t } = CM['@lezer/highlight']
 const { themeToExtension } = CM["@jeff-hykin/theme-tools"]
 window.CM = CM
+
+import { makeRuntime, runCode } from "./tools/js_runtime.js"
+let runtime = makeRuntime()
 
 // 
 // 
@@ -42,17 +46,35 @@ window.CM = CM
         const element = html`<Column name="Cell" width="100%" position="relative"></Column>`
         let onRun = () => {}
         if (type == "jsCode") {
-            onRun = () => {
-                // FIXME: run
-            }
             const editor = new Editor({
                 initialText: coreContent,
                 width: "100%",
-                onRun,
+                onRun: () => onRun()
             })
             const outputArea = html`<Column font="monospace" fontSize=0.8em></Column>`
             element.editor = editor
             element.outputArea = outputArea
+            onRun = () => {
+                removeAllChildElements(outputArea)
+                const { runtimeError, syntaxError } = runCode({
+                    code: editor.code,
+                    runtime,
+                    outputElement: outputArea,
+                })
+                if (runtimeError) {
+                    outputArea.append(
+                        html`<Row>
+                            runtimeError: ${runtimeError.stack}
+                        </Row>`
+                    )
+                } else if (syntaxError) {
+                    outputArea.append(
+                        html`<Row>
+                            syntaxError: ${syntaxError.stack}
+                        </Row>`
+                    )
+                }
+            }
             element.append(editor, outputArea)
         } else if (type == "file") {
             // FIXME: file
