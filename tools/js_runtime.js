@@ -42,6 +42,7 @@ export const makeRuntime = ({ randomSeed, }={}) => {
  */
 export const runCode = async ({ code, runtime, outputElement, }) => {
     code = convertImports(code)
+    console.debug(`code is:`,code)
     runtime.globalThis = runtime.globalThis || runtime
     runtime.$out = outputElement
     const variableNames = [...new Set(Object.keys(runtime).concat(Object.keys(builtins)).concat(Object.keys(globalThis)))].filter(isValidIdentifier)

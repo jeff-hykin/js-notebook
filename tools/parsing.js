@@ -2,6 +2,7 @@ import { parserFromWasm, xmlStylePreview } from "https://esm.sh/gh/jeff-hykin/de
 import javascript from "https://esm.sh/gh/jeff-hykin/common_tree_sitter_languages@1.3.1.1/main/javascript.js"
 // import { capitalize, indent, toCamelCase, digitsToEnglishArray, toPascalCase, toKebabCase, toSnakeCase, toScreamingKebabCase, toScreamingSnakeCase, toRepresentation, toString, regex, findAll, iterativelyFindAll, escapeRegexMatch, escapeRegexReplace, extractFirst, isValidIdentifier, removeCommonPrefix } from "https://esm.sh/gh/jeff-hykin/good-js@1.13.2.0/source/string.js"
 
+// FIXME: detect destructured top level assignments for auto-export
 
 const parser = await parserFromWasm(javascript) // path or Uint8Array
 
@@ -34,6 +35,7 @@ const parser = await parserFromWasm(javascript) // path or Uint8Array
  *
  */
 export function convertImports(code) {
+    let stuffToExport = []
     const root = parser.parse(code).rootNode
     const maxResultDepth = 5 // NOTE: this not as limiting as it seems: we only need to find top-level require statements, all the others will be handled by a different query
                                 //       it might be legitmately impossible to have a top level require that is deeper than this
@@ -179,5 +181,16 @@ export function convertImports(code) {
         code.slice(previousIndex, code.length)
     )
 
-    return codeChunks.join("")
+    const output = codeChunks.join("")
+    const newRoot = parser.parse(output).rootNode
+    // what to export
+    for (let each of [
+        // let/const
+        ...newRoot.quickQuery(`((lexical_declaration (variable_declarator (identifier) @varName )) @statement)`, { maxResultDepth }),
+        ...newRoot.quickQuery(`((variable_declaration (variable_declarator (identifier) @varName )) @statement)`, { maxResultDepth }),
+    ]) {
+        stuffToExport.push(each.varName.text)
+    }
+
+    return code + `;return {${stuffToExport.join(",")}}`
 }
