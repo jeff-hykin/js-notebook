@@ -1,9 +1,5 @@
-import { parserFromWasm, xmlStylePreview } from "https://deno.land/x/deno_tree_sitter@0.2.6.0/main.js"
-// import { parserFromWasm, xmlStylePreview } from "/Users/jeffhykin/repos/deno-tree-sitter/main.js"
-import javascript from "https://github.com/jeff-hykin/common_tree_sitter_languages/raw/4d8a6d34d7f6263ff570f333cdcf5ded6be89e3d/main/javascript.js"
-const parser = await parserFromWasm(javascript) // path or Uint8Array
-import { capitalize, indent, toCamelCase, digitsToEnglishArray, toPascalCase, toKebabCase, toSnakeCase, toScreamingKebabCase, toScreamingSnakeCase, toRepresentation, toString, regex, findAll, iterativelyFindAll, escapeRegexMatch, escapeRegexReplace, extractFirst, isValidIdentifier, removeCommonPrefix } from "https://deno.land/x/good@1.13.0.1/string.js"
-
+import { convertImports } from "./parsing.js"
+import { isValidIdentifier } from "https://deno.land/x/good@1.13.1.0/flattened/is_valid_identifier.js"
 
 const builtins = {
     "console": {
@@ -20,13 +16,55 @@ const builtins = {
             return import(`https://esm.sh/${path}`)
         }
     },
+    ...globalThis,
 }
 
-const runCode = ({ code, runtime, outputElement, }) => {
-    const result = eval(code)
-    return result
-}
-const makeRuntime = ({ randomSeed, }) => {
+export const makeRuntime = ({ randomSeed, }) => {
     const runtime = {...builtins}
+    runtime.globalThis = runtime
     return runtime
+}
+
+/**
+ * @example
+ * ```js
+ * let runtime = { console: { log: (...args)=>console.log("ha!", ...args) } }
+ * await runCode({
+ *     code: `
+ *         console.log("hello")
+ *         return { foo: "bar" }
+ *     `,
+ *     runtime,
+ *     outputElement: null,
+ * })
+ * console.log("final runtime is:", runtime)
+ * ```
+ */
+export const runCode = async ({ code, runtime, outputElement, }) => {
+    code = convertImports(code)
+    runtime.globalThis = runtime.globalThis || runtime
+    runtime.$out = outputElement
+    const variableNames = [...new Set(Object.keys(runtime).concat(Object.keys(builtins)).concat(Object.keys(globalThis)))].filter(isValidIdentifier)
+    let cellAsFunction
+    try {
+        cellAsFunction = eval?.(`
+            ({${variableNames.join(", ")}})=>((async function() {"use strict";
+                ${code}
+            })())
+        `)
+    } catch (error) {
+        // basically only syntax errors are possible here
+        return {
+            syntaxError: error,
+        }
+    }
+    try {
+        Object.assign(runtime, await cellAsFunction(runtime))
+    } catch (error) {
+        // TODO: handle error
+        console.debug(`error.stack is:`,error.stack)
+        return {
+            runtimeError: error,
+        }
+    }
 }
