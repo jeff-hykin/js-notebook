@@ -1,10 +1,9 @@
-import { Elemental, passAlongProps } from "https://esm.sh/gh/jeff-hykin/elemental@0.6.3/main/deno.js"
-// import { css, components, Column, Row, askForFiles, Code, Input, Button, Checkbox, Dropdown, popUp, cx, } from "https://esm.sh/gh/jeff-hykin/good-component@0.2.12/elements.js"
-import { css, components, Column, Row, askForFiles, Code, Input, Button, Checkbox, Dropdown, popUp, cx, } from "/Users/jeffhykin/repos/good-component/elements.js"
-import * as otherComponents from "/Users/jeffhykin/repos/good-component/main/components.js"
-import { fadeIn, fadeOut } from "https://esm.sh/gh/jeff-hykin/good-component@0.2.12/main/animations.js"
-import { showToast } from "https://esm.sh/gh/jeff-hykin/good-component@0.2.12/main/actions.js"
-import { addDynamicStyleFlags, setupStyles, createCssClass, setupClassStyles, hoverStyleHelper, combineClasses, mergeStyles, AfterSilent, removeAllChildElements } from "https://esm.sh/gh/jeff-hykin/good-component@0.2.12/main/helpers.js"
+import { Elemental, passAlongProps } from "https://esm.sh/gh/jeff-hykin/elemental@0.6.4/main/deno.js"
+import { css, components, Column, Row, askForFiles, Code, Input, Button, Checkbox, Dropdown, popUp, cx, } from "https://esm.sh/gh/jeff-hykin/good-component@0.3.0/elements.js"
+// import { css, components, Column, Row, askForFiles, Code, Input, Button, Checkbox, Dropdown, popUp, cx, } from "/Users/jeffhykin/repos/good-component/elements.js"
+import { fadeIn, fadeOut } from "https://esm.sh/gh/jeff-hykin/good-component@0.3.0/main/animations.js"
+import { showToast } from "https://esm.sh/gh/jeff-hykin/good-component@0.3.0/main/actions.js"
+import { addDynamicStyleFlags, setupStyles, createCssClass, setupClassStyles, hoverStyleHelper, combineClasses, mergeStyles, AfterSilent, removeAllChildElements } from "https://esm.sh/gh/jeff-hykin/good-component@0.3.0/main/helpers.js"
 import { zip, enumerate, count, permute, combinations, wrapAroundGet } from "https://esm.sh/gh/jeff-hykin/good-js@1.5.1.0/source/array.js"
 import { deepCopy, deepCopySymbol, allKeyDescriptions, deepSortObject, shallowSortObject, isGeneratorObject,isAsyncIterable, isSyncIterable, isIterableTechnically, isSyncIterableObjectOrContainer, allKeys } from "https://deno.land/x/good@1.13.2.0/value.js"
 import { dump, load } from "https://esm.sh/js-yaml@4.1.0/"
@@ -28,27 +27,33 @@ window.CM = CM
 // Components
 // 
 // 
+    function BasicButton(props) {
+        const element = html`<Button />`
+        passAlongProps(element, {
+            style: `
+                border-radius: 1em;
+                box-shadow: 0 4px 5px 0 rgba(0,0,0,0.14), 0 1px 10px 0 rgba(0,0,0,0.12), 0 2px 4px -1px rgba(0,0,0,0.3);
+            `,
+        })
+        passAlongProps(element, props)
+        return element
+    }
     function Cell({type, coreContent, style, }={}) {
-        const element = html`<Column width="100%"></Column>`
+        const element = html`<Column name="Cell" width="100%" position="relative"></Column>`
         let onRun = () => {}
         if (type == "jsCode") {
             onRun = () => {
                 // FIXME: run
             }
             const editor = new Editor({
-                initialText: coreContent, 
+                initialText: coreContent,
                 width: "100%",
                 onRun,
             })
             const outputArea = html`<Column font="monospace" fontSize=0.8em></Column>`
             element.editor = editor
             element.outputArea = outputArea
-            element.append(html`
-                <Column>
-                    ${editor}
-                    ${outputArea}
-                </Column>
-            `)
+            element.append(editor, outputArea)
         } else if (type == "file") {
             // FIXME: file
         } else if (type == "markdown") {
@@ -59,9 +64,15 @@ window.CM = CM
             // FIXME: file
         }
         element.append(
-            html`<Row gap=0.5em justify-content=center>
-                <Button onClick=${onRun}>run</Button>
-                <Button onClick=${()=>{element.remove()}}>delete (above)</Button>
+            html`<Row gap=0.5em padding=1em justify-content=center width="100%">
+                <BasicButton
+                    onclick=${(event)=>{
+                        element.insertAdjacentElement("afterend", Cell({type: "jsCode", coreContent: "\n\n\n\n"}))
+                    }}>
+                        add JS cell
+                </BasicButton>
+                <BasicButton background-color=turquoise onClick=${onRun}>run</BasicButton>
+                <BasicButton background-color=salmon onClick=${()=>{element.remove()}}>delete (above)</BasicButton>
             </Row>`
         )
         mergeStyles(element, style)
@@ -124,14 +135,15 @@ window.CM = CM
             }),
         })
         const element = parent.children[0]
+        element.name = "Editor"
         passAlongProps(element, props)
         element.editor = editor
         Object.defineProperties(element, {
             code: { get() { return editor.state.doc.text.join("\n") } },
         })
-        window.editor = editor
+        window.editor = editor // FIXME: remove, debugging only
         if (props.width) {
-            parent.children[0].style.width = props.width
+            element.style.width = props.width
         }
         return element
     }
@@ -140,8 +152,8 @@ window.CM = CM
 // setup
 // 
     const { html } = Elemental({
-        // ...components,
-        ...otherComponents,
+        ...components,
+        BasicButton,
         Editor,
         Cell,
     })
@@ -151,7 +163,7 @@ window.CM = CM
 // 
     let lineHeight = `1.5em`
     document.body = html`
-        <body font-size=15px background-color=whitesmoke overflow=scroll width=100vw padding=0 margin=0>
+        <body font-size=15px background-color=#5b5f60 overflow=scroll width=100vw padding=0 margin=0>
             <Cell type="jsCode" coreContent="console.log('howdy')\n\n\n\n" />
         </body>
     `
