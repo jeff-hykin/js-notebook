@@ -37,7 +37,7 @@
     import { run, hasCommand, throwIfFails, zipInto, mergeInto, returnAsString, Timeout, Env, Cwd, Stdin, Stdout, Stderr, Out, Overwrite, AppendTo, } from "https://deno.land/x/quickr@0.6.72/main/run.js"
     import { Console, clearAnsiStylesFrom, black, white, red, green, blue, yellow, cyan, magenta, lightBlack, lightWhite, lightRed, lightGreen, lightBlue, lightYellow, lightMagenta, lightCyan, blackBackground, whiteBackground, redBackground, greenBackground, blueBackground, yellowBackground, magentaBackground, cyanBackground, lightBlackBackground, lightRedBackground, lightGreenBackground, lightYellowBackground, lightBlueBackground, lightMagentaBackground, lightCyanBackground, lightWhiteBackground, bold, reset, dim, italic, underline, inverse, strikethrough, gray, grey, lightGray, lightGrey, grayBackground, greyBackground, lightGrayBackground, lightGreyBackground, } from "https://deno.land/x/quickr@0.6.72/main/console.js"
 
-    import { generateNewJs } from "./parsing.js"
+    import { generateNewJs } from "./tools/parsing.js"
     const websocketAddress = `ws://${args.address}:${args.port}`
     let latestCode, latestMessageForWeb
     async function updateLatestCode() {
@@ -111,7 +111,7 @@
                         <body>
                         </body>
                         <script type="module">
-                            import * as yaml from "./yaml.js"
+                            import * as yaml from "./tools/yaml.js"
                             let socket = new WebSocket("${websocketAddress}")
                             window.socket = socket
                             ${await FileSystem.read(`${FileSystem.thisFolder}/web.js`)}
