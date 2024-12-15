@@ -1,0 +1,777 @@
+<program>
+    <variable_declaration>
+        <var text="var" />
+        <variable_declarator>
+            <identifier text="a" />
+            <"=" text="=" />
+            <number text="10" />
+        </variable_declarator>
+        <"," text="," />
+        <variable_declarator>
+            <identifier text="b" />
+        </variable_declarator>
+        <"," text="," />
+        <variable_declarator>
+            <identifier text="c" />
+            <"=" text="=" />
+            <number text="2" />
+        </variable_declarator>
+    </variable_declaration>
+    <variable_declaration>
+        <var text="var" />
+        <variable_declarator>
+            <identifier text="hh" />
+            <"=" text="=" />
+            <object>
+                <"{" text="{" />
+                <"}" text="}" />
+            </object>
+        </variable_declarator>
+    </variable_declaration>
+    <expression_statement>
+        <assignment_expression>
+            <subscript_expression>
+                <identifier text="hh" />
+                <"[" text="[" />
+                <string>
+                    <"\"" text="\"" />
+                    <string_fragment text="i" />
+                    <"\"" text="\"" />
+                </string>
+                <"]" text="]" />
+            </subscript_expression>
+            <"=" text="=" />
+            <number text="10" />
+        </assignment_expression>
+    </expression_statement>
+    <expression_statement>
+        <assignment_expression>
+            <member_expression>
+                <identifier text="hh" />
+                <"." text="." />
+                <property_identifier text="i" />
+            </member_expression>
+            <"=" text="=" />
+            <number text="10" />
+        </assignment_expression>
+    </expression_statement>
+    <lexical_declaration>
+        <let text="let" />
+        <variable_declarator>
+            <identifier text="aa" />
+            <"=" text="=" />
+            <arrow_function>
+                <formal_parameters>
+                    <"(" text="(" />
+                    <")" text=")" />
+                </formal_parameters>
+                <"=>" text="=>" />
+                <statement_block>
+                    <"{" text="{" />
+                    <lexical_declaration>
+                        <let text="let" />
+                        <variable_declarator>
+                            <identifier text="g" />
+                            <"=" text="=" />
+                            <binary_expression>
+                                <identifier text="a" />
+                                <"+" text="+" />
+                                <identifier text="b" />
+                            </binary_expression>
+                        </variable_declarator>
+                        <";" text=";" />
+                    </lexical_declaration>
+                    <return_statement>
+                        <return text="return" />
+                        <number text="10" />
+                    </return_statement>
+                    <"}" text="}" />
+                </statement_block>
+            </arrow_function>
+        </variable_declarator>
+    </lexical_declaration>
+    <lexical_declaration>
+        <let text="let" />
+        <variable_declarator>
+            <identifier text="bb" />
+            <"=" text="=" />
+            <arrow_function>
+                <formal_parameters>
+                    <"(" text="(" />
+                    <")" text=")" />
+                </formal_parameters>
+                <"=>" text="=>" />
+                <binary_expression>
+                    <identifier text="a" />
+                    <"+" text="+" />
+                    <identifier text="c" />
+                </binary_expression>
+            </arrow_function>
+        </variable_declarator>
+    </lexical_declaration>
+    <expression_statement>
+        <augmented_assignment_expression>
+            <identifier text="a" />
+            <"+=" text="+=" />
+            <number text="11" />
+        </augmented_assignment_expression>
+    </expression_statement>
+    <expression_statement>
+        <assignment_expression>
+            <identifier text="a" />
+            <"=" text="=" />
+            <number text="1" />
+        </assignment_expression>
+    </expression_statement>
+    <lexical_declaration>
+        <const text="const" />
+        <variable_declarator>
+            <identifier text="ccc" />
+            <"=" text="=" />
+            <number text="10" />
+        </variable_declarator>
+    </lexical_declaration>
+    <lexical_declaration>
+        <let text="let" />
+        <variable_declarator>
+            <identifier text="ladjkfl" />
+            <"=" text="=" />
+            <number text="499420" />
+        </variable_declarator>
+    </lexical_declaration>
+    <import_statement>
+        <import text="import" />
+        <import_clause>
+            <named_imports>
+                <"{" text="{" />
+                <import_specifier>
+                    <identifier text="parserFromWasm" />
+                </import_specifier>
+                <"," text="," />
+                <import_specifier>
+                    <identifier text="xmlStylePreview" />
+                </import_specifier>
+                <"}" text="}" />
+            </named_imports>
+        </import_clause>
+        <from text="from" />
+        <string>
+            <"\"" text="\"" />
+            <string_fragment text="https://deno.land/x/deno_tree_sitter@0.2.8.3/main.js" />
+            <"\"" text="\"" />
+        </string>
+    </import_statement>
+    <comment text="// import { parserFromWasm, xmlStylePreview } from \"/Users/jeffhykin/repos/deno-tree-sitter/main.js\"" />
+    <import_statement>
+        <import text="import" />
+        <import_clause>
+            <identifier text="javascript" />
+        </import_clause>
+        <from text="from" />
+        <string>
+            <"\"" text="\"" />
+            <string_fragment text="https://github.com/jeff-hykin/common_tree_sitter_languages/raw/676ffa3b93768b8ac628fd5c61656f7dc41ba413/main/javascript.js" />
+            <"\"" text="\"" />
+        </string>
+    </import_statement>
+    <lexical_declaration>
+        <const text="const" />
+        <variable_declarator>
+            <identifier text="parser" />
+            <"=" text="=" />
+            <await_expression>
+                <await text="await" />
+                <call_expression>
+                    <identifier text="parserFromWasm" />
+                    <arguments>
+                        <"(" text="(" />
+                        <identifier text="javascript" />
+                        <")" text=")" />
+                    </arguments>
+                </call_expression>
+            </await_expression>
+        </variable_declarator>
+        <comment text="// path or Uint8Array" />
+    </lexical_declaration>
+    <import_statement>
+        <import text="import" />
+        <import_clause>
+            <named_imports>
+                <"{" text="{" />
+                <import_specifier>
+                    <identifier text="FileSystem" />
+                </import_specifier>
+                <"," text="," />
+                <import_specifier>
+                    <identifier text="glob" />
+                </import_specifier>
+                <"}" text="}" />
+            </named_imports>
+        </import_clause>
+        <from text="from" />
+        <string>
+            <"\"" text="\"" />
+            <string_fragment text="https://deno.land/x/quickr@0.6.72/main/file_system.js" />
+            <"\"" text="\"" />
+        </string>
+    </import_statement>
+    <import_statement>
+        <import text="import" />
+        <import_clause>
+            <named_imports>
+                <"{" text="{" />
+                <import_specifier>
+                    <identifier text="run" />
+                </import_specifier>
+                <"," text="," />
+                <import_specifier>
+                    <identifier text="hasCommand" />
+                </import_specifier>
+                <"," text="," />
+                <import_specifier>
+                    <identifier text="throwIfFails" />
+                </import_specifier>
+                <"," text="," />
+                <import_specifier>
+                    <identifier text="zipInto" />
+                </import_specifier>
+                <"," text="," />
+                <import_specifier>
+                    <identifier text="mergeInto" />
+                </import_specifier>
+                <"," text="," />
+                <import_specifier>
+                    <identifier text="returnAsString" />
+                </import_specifier>
+                <"," text="," />
+                <import_specifier>
+                    <identifier text="Timeout" />
+                </import_specifier>
+                <"," text="," />
+                <import_specifier>
+                    <identifier text="Env" />
+                </import_specifier>
+                <"," text="," />
+                <import_specifier>
+                    <identifier text="Cwd" />
+                </import_specifier>
+                <"," text="," />
+                <import_specifier>
+                    <identifier text="Stdin" />
+                </import_specifier>
+                <"," text="," />
+                <import_specifier>
+                    <identifier text="Stdout" />
+                </import_specifier>
+                <"," text="," />
+                <import_specifier>
+                    <identifier text="Stderr" />
+                </import_specifier>
+                <"," text="," />
+                <import_specifier>
+                    <identifier text="Out" />
+                </import_specifier>
+                <"," text="," />
+                <import_specifier>
+                    <identifier text="Overwrite" />
+                </import_specifier>
+                <"," text="," />
+                <import_specifier>
+                    <identifier text="AppendTo" />
+                </import_specifier>
+                <"," text="," />
+                <"}" text="}" />
+            </named_imports>
+        </import_clause>
+        <from text="from" />
+        <string>
+            <"\"" text="\"" />
+            <string_fragment text="https://deno.land/x/quickr@0.6.72/main/run.js" />
+            <"\"" text="\"" />
+        </string>
+    </import_statement>
+    <import_statement>
+        <import text="import" />
+        <import_clause>
+            <named_imports>
+                <"{" text="{" />
+                <import_specifier>
+                    <identifier text="Console" />
+                </import_specifier>
+                <"," text="," />
+                <import_specifier>
+                    <identifier text="clearAnsiStylesFrom" />
+                </import_specifier>
+                <"," text="," />
+                <import_specifier>
+                    <identifier text="black" />
+                </import_specifier>
+                <"," text="," />
+                <import_specifier>
+                    <identifier text="white" />
+                </import_specifier>
+                <"," text="," />
+                <import_specifier>
+                    <identifier text="red" />
+                </import_specifier>
+                <"," text="," />
+                <import_specifier>
+                    <identifier text="green" />
+                </import_specifier>
+                <"," text="," />
+                <import_specifier>
+                    <identifier text="blue" />
+                </import_specifier>
+                <"," text="," />
+                <import_specifier>
+                    <identifier text="yellow" />
+                </import_specifier>
+                <"," text="," />
+                <import_specifier>
+                    <identifier text="cyan" />
+                </import_specifier>
+                <"," text="," />
+                <import_specifier>
+                    <identifier text="magenta" />
+                </import_specifier>
+                <"," text="," />
+                <import_specifier>
+                    <identifier text="lightBlack" />
+                </import_specifier>
+                <"," text="," />
+                <import_specifier>
+                    <identifier text="lightWhite" />
+                </import_specifier>
+                <"," text="," />
+                <import_specifier>
+                    <identifier text="lightRed" />
+                </import_specifier>
+                <"," text="," />
+                <import_specifier>
+                    <identifier text="lightGreen" />
+                </import_specifier>
+                <"," text="," />
+                <import_specifier>
+                    <identifier text="lightBlue" />
+                </import_specifier>
+                <"," text="," />
+                <import_specifier>
+                    <identifier text="lightYellow" />
+                </import_specifier>
+                <"," text="," />
+                <import_specifier>
+                    <identifier text="lightMagenta" />
+                </import_specifier>
+                <"," text="," />
+                <import_specifier>
+                    <identifier text="lightCyan" />
+                </import_specifier>
+                <"," text="," />
+                <import_specifier>
+                    <identifier text="blackBackground" />
+                </import_specifier>
+                <"," text="," />
+                <import_specifier>
+                    <identifier text="whiteBackground" />
+                </import_specifier>
+                <"," text="," />
+                <import_specifier>
+                    <identifier text="redBackground" />
+                </import_specifier>
+                <"," text="," />
+                <import_specifier>
+                    <identifier text="greenBackground" />
+                </import_specifier>
+                <"," text="," />
+                <import_specifier>
+                    <identifier text="blueBackground" />
+                </import_specifier>
+                <"," text="," />
+                <import_specifier>
+                    <identifier text="yellowBackground" />
+                </import_specifier>
+                <"," text="," />
+                <import_specifier>
+                    <identifier text="magentaBackground" />
+                </import_specifier>
+                <"," text="," />
+                <import_specifier>
+                    <identifier text="cyanBackground" />
+                </import_specifier>
+                <"," text="," />
+                <import_specifier>
+                    <identifier text="lightBlackBackground" />
+                </import_specifier>
+                <"," text="," />
+                <import_specifier>
+                    <identifier text="lightRedBackground" />
+                </import_specifier>
+                <"," text="," />
+                <import_specifier>
+                    <identifier text="lightGreenBackground" />
+                </import_specifier>
+                <"," text="," />
+                <import_specifier>
+                    <identifier text="lightYellowBackground" />
+                </import_specifier>
+                <"," text="," />
+                <import_specifier>
+                    <identifier text="lightBlueBackground" />
+                </import_specifier>
+                <"," text="," />
+                <import_specifier>
+                    <identifier text="lightMagentaBackground" />
+                </import_specifier>
+                <"," text="," />
+                <import_specifier>
+                    <identifier text="lightCyanBackground" />
+                </import_specifier>
+                <"," text="," />
+                <import_specifier>
+                    <identifier text="lightWhiteBackground" />
+                </import_specifier>
+                <"," text="," />
+                <import_specifier>
+                    <identifier text="bold" />
+                </import_specifier>
+                <"," text="," />
+                <import_specifier>
+                    <identifier text="reset" />
+                </import_specifier>
+                <"," text="," />
+                <import_specifier>
+                    <identifier text="dim" />
+                </import_specifier>
+                <"," text="," />
+                <import_specifier>
+                    <identifier text="italic" />
+                </import_specifier>
+                <"," text="," />
+                <import_specifier>
+                    <identifier text="underline" />
+                </import_specifier>
+                <"," text="," />
+                <import_specifier>
+                    <identifier text="inverse" />
+                </import_specifier>
+                <"," text="," />
+                <import_specifier>
+                    <identifier text="strikethrough" />
+                </import_specifier>
+                <"," text="," />
+                <import_specifier>
+                    <identifier text="gray" />
+                </import_specifier>
+                <"," text="," />
+                <import_specifier>
+                    <identifier text="grey" />
+                </import_specifier>
+                <"," text="," />
+                <import_specifier>
+                    <identifier text="lightGray" />
+                </import_specifier>
+                <"," text="," />
+                <import_specifier>
+                    <identifier text="lightGrey" />
+                </import_specifier>
+                <"," text="," />
+                <import_specifier>
+                    <identifier text="grayBackground" />
+                </import_specifier>
+                <"," text="," />
+                <import_specifier>
+                    <identifier text="greyBackground" />
+                </import_specifier>
+                <"," text="," />
+                <import_specifier>
+                    <identifier text="lightGrayBackground" />
+                </import_specifier>
+                <"," text="," />
+                <import_specifier>
+                    <identifier text="lightGreyBackground" />
+                </import_specifier>
+                <"," text="," />
+                <"}" text="}" />
+            </named_imports>
+        </import_clause>
+        <from text="from" />
+        <string>
+            <"\"" text="\"" />
+            <string_fragment text="https://deno.land/x/quickr@0.6.72/main/console.js" />
+            <"\"" text="\"" />
+        </string>
+    </import_statement>
+    <import_statement>
+        <import text="import" />
+        <import_clause>
+            <identifier text="DateTime" />
+        </import_clause>
+        <from text="from" />
+        <string>
+            <"\"" text="\"" />
+            <string_fragment text="https://deno.land/x/good@1.13.1.0/date.js" />
+            <"\"" text="\"" />
+        </string>
+    </import_statement>
+    <import_statement>
+        <import text="import" />
+        <import_clause>
+            <named_imports>
+                <"{" text="{" />
+                <import_specifier>
+                    <identifier text="allKeys" />
+                </import_specifier>
+                <"}" text="}" />
+            </named_imports>
+        </import_clause>
+        <from text="from" />
+        <string>
+            <"\"" text="\"" />
+            <string_fragment text="https://deno.land/x/good@1.13.1.0/value.js" />
+            <"\"" text="\"" />
+        </string>
+    </import_statement>
+    <lexical_declaration>
+        <let text="let" />
+        <variable_declarator>
+            <identifier text="root" />
+        </variable_declarator>
+        <"," text="," />
+        <variable_declarator>
+            <identifier text="tree" />
+        </variable_declarator>
+    </lexical_declaration>
+    <expression_statement>
+        <call_expression>
+            <member_expression>
+                <identifier text="FileSystem" />
+                <"." text="." />
+                <property_identifier text="write" />
+            </member_expression>
+            <arguments>
+                <"(" text="(" />
+                <object>
+                    <"{" text="{" />
+                    <pair>
+                        <property_identifier text="path" />
+                        <":" text=":" />
+                        <string>
+                            <"\"" text="\"" />
+                            <string_fragment text="./test.js.html" />
+                            <"\"" text="\"" />
+                        </string>
+                    </pair>
+                    <"," text="," />
+                    <pair>
+                        <property_identifier text="data" />
+                        <":" text=":" />
+                        <call_expression>
+                            <identifier text="xmlStylePreview" />
+                            <arguments>
+                                <"(" text="(" />
+                                <assignment_expression>
+                                    <identifier text="root" />
+                                    <"=" text="=" />
+                                    <member_expression>
+                                        <parenthesized_expression>
+                                            <"(" text="(" />
+                                            <assignment_expression>
+                                                <identifier text="tree" />
+                                                <"=" text="=" />
+                                                <call_expression>
+                                                    <member_expression>
+                                                        <identifier text="parser" />
+                                                        <"." text="." />
+                                                        <property_identifier text="parse" />
+                                                    </member_expression>
+                                                    <arguments>
+                                                        <"(" text="(" />
+                                                        <call_expression>
+                                                            <member_expression>
+                                                                <member_expression>
+                                                                    <identifier text="FileSystem" />
+                                                                    <"." text="." />
+                                                                    <property_identifier text="sync" />
+                                                                </member_expression>
+                                                                <"." text="." />
+                                                                <property_identifier text="read" />
+                                                            </member_expression>
+                                                            <arguments>
+                                                                <"(" text="(" />
+                                                                <member_expression>
+                                                                    <identifier text="FileSystem" />
+                                                                    <"." text="." />
+                                                                    <property_identifier text="thisFile" />
+                                                                </member_expression>
+                                                                <")" text=")" />
+                                                            </arguments>
+                                                        </call_expression>
+                                                        <")" text=")" />
+                                                    </arguments>
+                                                </call_expression>
+                                            </assignment_expression>
+                                            <")" text=")" />
+                                        </parenthesized_expression>
+                                        <"." text="." />
+                                        <property_identifier text="rootNode" />
+                                    </member_expression>
+                                </assignment_expression>
+                                <")" text=")" />
+                            </arguments>
+                        </call_expression>
+                    </pair>
+                    <"," text="," />
+                    <"}" text="}" />
+                </object>
+                <")" text=")" />
+            </arguments>
+        </call_expression>
+    </expression_statement>
+    <comment text="// console.debug(`allKeys(tree) is:`,allKeys(tree))" />
+    <expression_statement>
+        <call_expression>
+            <member_expression>
+                <identifier text="console" />
+                <"." text="." />
+                <property_identifier text="debug" />
+            </member_expression>
+            <arguments>
+                <"(" text="(" />
+                <template_string>
+                    <"`" text="`" />
+                    <string_fragment text="tree.language.fields is:" />
+                    <"`" text="`" />
+                </template_string>
+                <"," text="," />
+                <member_expression>
+                    <member_expression>
+                        <identifier text="tree" />
+                        <"." text="." />
+                        <property_identifier text="language" />
+                    </member_expression>
+                    <"." text="." />
+                    <property_identifier text="fields" />
+                </member_expression>
+                <")" text=")" />
+            </arguments>
+        </call_expression>
+    </expression_statement>
+    <for_in_statement>
+        <for text="for" />
+        <"(" text="(" />
+        <let text="let" />
+        <identifier text="each" />
+        <of text="of" />
+        <call_expression>
+            <member_expression>
+                <identifier text="root" />
+                <"." text="." />
+                <property_identifier text="quickQuery" />
+            </member_expression>
+            <arguments>
+                <"(" text="(" />
+                <template_string>
+                    <"`" text="`" />
+                    <string_fragment text="(assignment_expression)" />
+                    <"`" text="`" />
+                </template_string>
+                <")" text=")" />
+            </arguments>
+        </call_expression>
+        <")" text=")" />
+        <statement_block>
+            <"{" text="{" />
+            <expression_statement>
+                <call_expression>
+                    <member_expression>
+                        <identifier text="console" />
+                        <"." text="." />
+                        <property_identifier text="debug" />
+                    </member_expression>
+                    <arguments>
+                        <"(" text="(" />
+                        <template_string>
+                            <"`" text="`" />
+                            <string_fragment text="each is:" />
+                            <"`" text="`" />
+                        </template_string>
+                        <"," text="," />
+                        <identifier text="each" />
+                        <")" text=")" />
+                    </arguments>
+                </call_expression>
+            </expression_statement>
+            <"}" text="}" />
+        </statement_block>
+    </for_in_statement>
+    <comment text="// import {g} from \"./test.js\"" />
+    <function_declaration>
+        <function text="function" />
+        <identifier text="f" />
+        <formal_parameters>
+            <"(" text="(" />
+            <identifier text="a" />
+            <"," text="," />
+            <identifier text="b" />
+            <"," text="," />
+            <identifier text="c" />
+            <")" text=")" />
+        </formal_parameters>
+        <statement_block>
+            <"{" text="{" />
+            <return_statement>
+                <return text="return" />
+                <binary_expression>
+                    <binary_expression>
+                        <binary_expression>
+                            <identifier text="a" />
+                            <"+" text="+" />
+                            <identifier text="b" />
+                        </binary_expression>
+                        <"+" text="+" />
+                        <identifier text="c" />
+                    </binary_expression>
+                    <"&&" text="&&" />
+                    <object>
+                        <"{" text="{" />
+                        <pair>
+                            <property_identifier text="g" />
+                            <":" text=":" />
+                            <binary_expression>
+                                <identifier text="a" />
+                                <"+" text="+" />
+                                <identifier text="b" />
+                            </binary_expression>
+                        </pair>
+                        <"}" text="}" />
+                    </object>
+                </binary_expression>
+            </return_statement>
+            <"}" text="}" />
+        </statement_block>
+    </function_declaration>
+    <expression_statement>
+        <call_expression>
+            <member_expression>
+                <identifier text="console" />
+                <"." text="." />
+                <property_identifier text="log" />
+            </member_expression>
+            <arguments>
+                <"(" text="(" />
+                <string>
+                    <"\"" text="\"" />
+                    <string_fragment text="Hello World!" />
+                    <"\"" text="\"" />
+                </string>
+                <")" text=")" />
+            </arguments>
+        </call_expression>
+    </expression_statement>
+    <variable_declaration>
+        <var text="var" />
+        <variable_declarator>
+            <identifier text="howd" />
+        </variable_declarator>
+    </variable_declaration>
+</program>
