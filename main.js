@@ -1,14 +1,16 @@
 import { Elemental, passAlongProps } from "https://esm.sh/gh/jeff-hykin/elemental@0.6.3/main/deno.js"
-import { css, components, Column, Row, askForFiles, Code, Input, Button, Checkbox, Dropdown, popUp, cx, } from "https://esm.sh/gh/jeff-hykin/good-component@0.2.12/elements.js"
+// import { css, components, Column, Row, askForFiles, Code, Input, Button, Checkbox, Dropdown, popUp, cx, } from "https://esm.sh/gh/jeff-hykin/good-component@0.2.12/elements.js"
+import { css, components, Column, Row, askForFiles, Code, Input, Button, Checkbox, Dropdown, popUp, cx, } from "/Users/jeffhykin/repos/good-component/elements.js"
+import * as otherComponents from "/Users/jeffhykin/repos/good-component/main/components.js"
 import { fadeIn, fadeOut } from "https://esm.sh/gh/jeff-hykin/good-component@0.2.12/main/animations.js"
 import { showToast } from "https://esm.sh/gh/jeff-hykin/good-component@0.2.12/main/actions.js"
 import { addDynamicStyleFlags, setupStyles, createCssClass, setupClassStyles, hoverStyleHelper, combineClasses, mergeStyles, AfterSilent, removeAllChildElements } from "https://esm.sh/gh/jeff-hykin/good-component@0.2.12/main/helpers.js"
 import { zip, enumerate, count, permute, combinations, wrapAroundGet } from "https://esm.sh/gh/jeff-hykin/good-js@1.5.1.0/source/array.js"
-import * as yaml from "https://esm.sh/js-yaml@4.1.0/dist/index.js"
-yaml.stringify = yaml.dump
-yaml.parse = yaml.load
+import { deepCopy, deepCopySymbol, allKeyDescriptions, deepSortObject, shallowSortObject, isGeneratorObject,isAsyncIterable, isSyncIterable, isIterableTechnically, isSyncIterableObjectOrContainer, allKeys } from "https://deno.land/x/good@1.13.2.0/value.js"
+import { dump, load } from "https://esm.sh/js-yaml@4.1.0/"
+const yaml = { stringify: dump, parse: load }
 
-import storageObject from "https://esm.sh/gh/jeff-hykin/storage-object@0.0.2.0/main.js"
+import storageObject from "https://esm.sh/gh/jeff-hykin/storage-object@0.0.3.5/main.js"
 
 import CM from 'https://esm.sh/gh/jeff-hykin/codemirror_esm@0.0.2.0/main.js'
 import atomOne from 'https://esm.sh/gh/jeff-hykin/codemirror_esm@0.0.2.0/themes/atomone.js'
@@ -19,31 +21,53 @@ const { EditorState, Prec } = CM["@codemirror/state"]
 const { javascript } = CM["@codemirror/lang-javascript"]
 const { tags: t } = CM['@lezer/highlight']
 const { themeToExtension } = CM["@jeff-hykin/theme-tools"]
+window.CM = CM
 
 // 
 // 
 // Components
 // 
 // 
-    function DataLine(lineHistory) {
-        const element = html`<div height=var(--line-height)></div>`
-        const mostRecentEntry = (lineHistory.at(-1)||[])
-        element.append(html`<span background-color=white border-radius=1rem margin-right=1rem opacity=${lineHeight.length>1?0:1}>(${lineHistory.length})</span>`)
-        for (const [key, value] of Object.entries(mostRecentEntry)) {
-            element.append(html`<span>${key}: <span color="aquamarine">${value.repr}</span>, </span>`)
+    function Cell({type, coreContent, style, }={}) {
+        const element = html`<Column width="100%"></Column>`
+        let onRun = () => {}
+        if (type == "jsCode") {
+            onRun = () => {
+                // FIXME: run
+            }
+            const editor = new Editor({
+                initialText: coreContent, 
+                width: "100%",
+                onRun,
+            })
+            const outputArea = html`<Column font="monospace" fontSize=0.8em></Column>`
+            element.editor = editor
+            element.outputArea = outputArea
+            element.append(html`
+                <Column>
+                    ${editor}
+                    ${outputArea}
+                </Column>
+            `)
+        } else if (type == "file") {
+            // FIXME: file
+        } else if (type == "markdown") {
+            // FIXME: file
+        } else if (type == "pseudoShCode") {
+            // FIXME: file
+        } else if (type == "pyCode") {
+            // FIXME: file
         }
+        element.append(
+            html`<Row gap=0.5em justify-content=center>
+                <Button onClick=${onRun}>run</Button>
+                <Button onClick=${()=>{element.remove()}}>delete (above)</Button>
+            </Row>`
+        )
+        mergeStyles(element, style)
         return element
     }
-    function dataToLines(dataByLineNumber) {
-        let out = html`<div style="--line-height:${lineHeight}" background-color=gray display=flex flex-direction=column flex-grow=1></div>`
-        let index = -1
-        while (++index < latestCode.split(/\n/g).length) {
-            const lineHistory = (dataByLineNumber[index]||[])
-            out.append(DataLine(lineHistory))
-        }
-        return out
-    }
-    function Editor({initialText, onChange, onRun, ...props}={}) yaml{
+    function Editor({initialText, onChange, onRun, ...props}={}){
         const parent = document.createElement("div")
         let editor = new EditorView({
             parent,
@@ -74,15 +98,28 @@ const { themeToExtension } = CM["@jeff-hykin/theme-tools"]
                         })
                     ),
                     
-                    // // 
-                    // // example: onChange
-                    // // 
-                    // EditorView.updateListener.of((update)=>{
-                    //     // const codeString = editor.state.doc.text.join("\n")
-                    //     // console.log("Something (no matter how small) happened!")
-                    //     // console.log("I'm called on init, and twice per keypress")
-                    //     // console.log("DON'T USE THIS UNLESS YOU HAVE TO!")
-                    // })
+                    //
+                    // keymap
+                    //
+                    Prec.high(keymap.of([{
+                        key: "Ctrl-Enter",
+                        run: () =>{
+                            // editor.state.doc.text.join("\n")
+                            console.log("User pressed Ctrl+Enter!")
+                            onRun&&onRun()
+                            return true
+                        }}
+                    ])),
+                    
+                    // 
+                    // codeChange
+                    // 
+                    ...(!onChange?[]:
+                        onChange&&EditorView.updateListener.of((update)=>{
+                            // const codeString = editor.state.doc.text.join("\n")
+                            onChange&&onChange()
+                        })
+                    ),
                 ],
             }),
         })
@@ -103,20 +140,18 @@ const { themeToExtension } = CM["@jeff-hykin/theme-tools"]
 // setup
 // 
     const { html } = Elemental({
-        ...components,
+        // ...components,
+        ...otherComponents,
         Editor,
-        DataLine,
+        Cell,
     })
 
 // 
 // body
 // 
+    let lineHeight = `1.5em`
     document.body = html`
-        <body font-size=15px background-color=whitesmoke overflow=scroll width=100vw>
-            <Column>
-                <span>Howdy!</span>
-                <span>Howdy!</span>
-                <span>Howdy!</span>
-            </Column>
+        <body font-size=15px background-color=whitesmoke overflow=scroll width=100vw padding=0 margin=0>
+            <Cell type="jsCode" coreContent="console.log('howdy')\n\n\n\n" />
         </body>
     `
