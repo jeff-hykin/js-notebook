@@ -26,6 +26,16 @@ window.CM = CM
 import { makeRuntime, runCode } from "./tools/js_runtime.js"
 let runtime = makeRuntime()
 
+
+// TODO:
+    // get console.log to show up in $out
+    // make a save-html button  (body.innerHTML save to file)
+    // save and load to yaml file (code and HTML output)
+    // detect top level destructured variable names
+    // add filesystem
+    // drag-and-drop text file loader
+    // image renderer
+
 // 
 // 
 // Components
