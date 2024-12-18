@@ -53,7 +53,7 @@ let runtime = makeRuntime()
         return element
     }
     function Cell({type, coreContent, style, }={}) {
-        const element = html`<Column name="Cell" width="100%" position="relative"></Column>`
+        const element = html`<Column name="Cell" border-top="2px solid #546E7A" width="100%" position="relative"></Column>`
         let onRun = () => {}
         if (type == "jsCode") {
             const editor = new Editor({
@@ -61,7 +61,15 @@ let runtime = makeRuntime()
                 width: "100%",
                 onRun: () => onRun()
             })
-            const outputArea = html`<Column font="monospace" fontSize=0.8em></Column>`
+            const outputArea = html`<Column
+                font-family="monospace"
+                fontSize=0.8em
+                background="#546E7A"
+                width="100%"
+                padding="0.5rem"
+                overflow="auto"
+                max-height="20em"
+                />`
             element.editor = editor
             element.outputArea = outputArea
             onRun = () => {
@@ -195,7 +203,7 @@ let runtime = makeRuntime()
 // 
     let lineHeight = `1.5em`
     document.body = html`
-        <body font-size=15px background-color=#5b5f60 overflow=scroll width=100vw padding=0 margin=0>
+        <body font-size=15px background-color=#272c35 overflow=scroll width=100vw padding=0 margin=0>
             <Cell type="jsCode" coreContent="console.log('howdy')\n\n\n\n" />
         </body>
     `
