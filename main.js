@@ -4,7 +4,10 @@ import { css, components, Column, Row, askForFiles, Code, Input, Button, Checkbo
 import { fadeIn, fadeOut } from "https://esm.sh/gh/jeff-hykin/good-component@0.3.0/main/animations.js"
 import { showToast } from "https://esm.sh/gh/jeff-hykin/good-component@0.3.0/main/actions.js"
 import { addDynamicStyleFlags, setupStyles, createCssClass, setupClassStyles, hoverStyleHelper, combineClasses, mergeStyles, AfterSilent, removeAllChildElements } from "https://esm.sh/gh/jeff-hykin/good-component@0.3.0/main/helpers.js"
-import { zip, enumerate, count, permute, combinations, wrapAroundGet } from "https://esm.sh/gh/jeff-hykin/good-js@1.5.1.0/source/array.js"
+import { zip, enumerate, count, permute, combinations, wrapAroundGet } from "https://esm.sh/gh/jeff-hykin/good-js@1.13.4.0/source/array.js"
+import { toCamelCase } from "https://esm.sh/gh/jeff-hykin/good-js@1.13.4.0/source/flattened/to_camel_case.js"
+import { pathPieces } from "https://esm.sh/gh/jeff-hykin/good-js@1.13.4.0/source/flattened/path_pieces.js"
+import { isValidIdentifier } from "https://esm.sh/gh/jeff-hykin/good-js@1.13.4.0/source/flattened/is_valid_identifier.js"
 // import { deepCopy, deepCopySymbol, allKeyDescriptions, deepSortObject, shallowSortObject, isGeneratorObject,isAsyncIterable, isSyncIterable, isIterableTechnically, isSyncIterableObjectOrContainer, allKeys } from "https://deno.land/x/good@1.13.2.0/value.js"
 import { deepCopy, deepCopySymbol, allKeyDescriptions, deepSortObject, shallowSortObject, isGeneratorObject,isAsyncIterable, isSyncIterable, isIterableTechnically, isSyncIterableObjectOrContainer, allKeys } from "https://esm.sh/gh/jeff-hykin/good-js@1.13.2.0/source/value.js"
 import { dump, load } from "https://esm.sh/js-yaml@4.1.0/"
@@ -52,8 +55,73 @@ let runtime = makeRuntime()
         passAlongProps(element, props)
         return element
     }
-    function Cell({type, coreContent, style, }={}) {
+    function Cell({type, filePath, coreContent, style, }={}) {
         const element = html`<Column name="Cell" border-top="2px solid #546E7A" width="100%" position="relative"></Column>`
+        element.transistion = `all 0.2s ease-in-out`
+        const dropStyleChanger = (isDroppping)=>{
+            if (isDroppping) {
+                element.style.border = "2px dashed #546E7A"
+            } else {
+                element.style.border = "none"
+            }
+        }
+        element.addEventListener('dragover', (event) => {
+            event.preventDefault()
+            dropStyleChanger(true)
+        })
+        element.addEventListener('dragleave', () => {
+            dropStyleChanger(false)
+        })
+        element.addEventListener('drop', (event) => {
+            event.preventDefault()
+            dropStyleChanger(false)
+            const fileObjects = event.dataTransfer.files
+            if (fileObjects.length == 1) {
+                // const fileObject = fileObjects[0]
+                // const [ folders, itemName, itemExtensionWithDot ] = pathPieces(fileObject.name)
+                // let varName = toCamelCase(itemName)
+                // while (1) {
+                //     if (isValidIdentifier(varName)) {
+                //         if (confirm(`should I `)) {
+                //     }
+                    
+                // }
+                
+                prompt("What variable should I assign to this file?")
+                // check if text file
+                try {
+                    fileObject.text().then(text=>{
+                        element.insertAdjacentElement("beforebegin", Cell({type: "file", filePath: fileObject.name, coreContent: text}))
+                    })
+                } catch (error) {
+                    fileObjects.arrayBuffer().then(data=>new Uint8Array(data)).then(data=>{
+                        element.insertAdjacentElement("beforebegin", Cell({type: "file", filePath: fileObject.name, coreContent: data}))
+                    })
+                }
+            }
+            // const items = event.dataTransfer.items
+            // if (fileInfos.length == 1) {
+            //     globalThis.file = file
+            // }
+            // for (let [info, item] of zip(fileInfos, items)) {
+            //     if (item.kind === "file") {
+            //         var data = new Uint8Array(await info.arrayBuffer()) 
+            //         const file = item.getAsFile()
+            //         console.debug(`file is:`,file)
+            //         globalThis.file = file
+            //     }
+            // }
+            // if (files.length == 1) { 
+            //     globalThis.data = event
+            // } else if (files.length > 0) {
+            //     // Display the file names
+            //     Array.from(files).forEach(file => {
+            //         const listItem = document.createElement('li')
+            //         listItem.textContent = file.name
+            //         fileList.appendChild(listItem)
+            //     })
+            // }
+        })
         let onRun = () => {}
         if (type == "jsCode") {
             const editor = new Editor({
@@ -72,18 +140,21 @@ let runtime = makeRuntime()
                 />`
             element.editor = editor
             element.outputArea = outputArea
-            onRun = () => {
+            onRun = async () => {
                 removeAllChildElements(outputArea)
-                const { runtimeError, syntaxError } = runCode({
+                const { runtimeError, syntaxError } = await runCode({
                     code: editor.code,
                     runtime,
                     outputElement: outputArea,
                 })
                 if (runtimeError) {
                     outputArea.append(
-                        html`<Row>
-                            runtimeError: ${runtimeError.stack}
-                        </Row>`
+                        html`<Column style="color:salmon;">
+                            runtimeError: ${runtimeError?.message}<br><br>
+                            <div padding-left=1em>
+                                ${runtimeError.stack.replace(/@https?:\/\/localhost:.+( eval)?(?=:\d+:\d+)/g, ` line`).split(/\n/g,).map(line=>html`<p>${line}</p>`)}
+                            </div>
+                        </Column>`
                     )
                 } else if (syntaxError) {
                     outputArea.append(
@@ -95,7 +166,15 @@ let runtime = makeRuntime()
             }
             element.append(editor, outputArea)
         } else if (type == "file") {
-            // FIXME: file
+            element.append(
+                html`
+                <Column width="100%" height="100%" padding="0.5em">
+                    <h4>${filePath}</h4>
+                    <Code>
+                        ${typeof coreContent == "string"?coreContent:`[${coreContent.length} bytes]`}
+                    </Code>
+                </Column>`
+            )
         } else if (type == "markdown") {
             // FIXME: file
         } else if (type == "pseudoShCode") {

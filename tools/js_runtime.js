@@ -110,11 +110,8 @@ export const runCode = async ({ code, runtime, outputElement, cellNumber=0 }) =>
     let cellAsFunction
     try {
         // run a non-local eval, so there are no variable leaks
-        cellAsFunction = eval?.(`
-            ({${variableNames.join(", ")}})=>((async function() {"use strict";
-                ${code}
-            })())
-        `)
+        cellAsFunction = eval?.(`({${variableNames.join(", ")}})=>((async function() {"use strict"; ${code}
+        ;})())`)
     } catch (error) {
         console.debug(`error is:`,error)
         console.debug(`error.stack is:`,error.stack)
@@ -129,8 +126,10 @@ export const runCode = async ({ code, runtime, outputElement, cellNumber=0 }) =>
         // TODO: handle error
         console.debug(`error is:`,error)
         console.debug(`error.stack is:`,error.stack.replace(/@http:\/\/localhost:.+ eval:/g, `cell: ${cellNumber}:`))
+        console.log(`returning runtimeError`)
         return {
             runtimeError: error,
         }
     }
+    return {}
 }
