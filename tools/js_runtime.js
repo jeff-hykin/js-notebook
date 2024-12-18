@@ -126,7 +126,6 @@ export const runCode = async ({ code, runtime, outputElement, cellNumber=0 }) =>
         // TODO: handle error
         console.debug(`error is:`,error)
         console.debug(`error.stack is:`,error.stack.replace(/@http:\/\/localhost:.+ eval:/g, `cell: ${cellNumber}:`))
-        console.log(`returning runtimeError`)
         return {
             runtimeError: error,
         }

@@ -12,6 +12,7 @@ const parser = await parserFromWasm(javascript) // path or Uint8Array
  * @example
  * ```js
  * console.log(convertImports(`
+ *     import { isValidIdentifier } from "https://esm.sh/gh/jeff-hykin/good-js@1.13.4.0/source/flattened/is_valid_identifier.js"
  *     import { foo } from "bar"
  *     import { foo as bar } from "bar"
  *     import * as foo from "bar"
@@ -192,5 +193,5 @@ export function convertImports(code) {
         stuffToExport.push(each.varName.text)
     }
 
-    return code + `;return {${stuffToExport.join(",")}}`
+    return output + `;return {${stuffToExport.join(",")}}`
 }

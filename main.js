@@ -147,20 +147,26 @@ let runtime = makeRuntime()
                     runtime,
                     outputElement: outputArea,
                 })
+                const formatError = (error)=>{
+                    return error.stack.replace(/@https?:\/\/localhost:.+( eval)?(?=:\d+:\d+)/g, ` line`).split(/\n/g,).map(line=>html`<p>${line}</p>`)
+                }
                 if (runtimeError) {
                     outputArea.append(
                         html`<Column style="color:salmon;">
                             runtimeError: ${runtimeError?.message}<br><br>
                             <div padding-left=1em>
-                                ${runtimeError.stack.replace(/@https?:\/\/localhost:.+( eval)?(?=:\d+:\d+)/g, ` line`).split(/\n/g,).map(line=>html`<p>${line}</p>`)}
+                                ${formatError(runtimeError)}
                             </div>
                         </Column>`
                     )
                 } else if (syntaxError) {
                     outputArea.append(
-                        html`<Row>
-                            syntaxError: ${syntaxError.stack}
-                        </Row>`
+                        html`<Column style="color:salmon;">
+                            syntaxError: ${syntaxError?.message}<br><br>
+                            <div padding-left=1em>
+                                ${formatError(syntaxError)}
+                            </div>
+                        </Column>`
                     )
                 }
             }
