@@ -107,14 +107,14 @@ export const runCode = async ({ code, runtime, outputElement, cellNumber=0 }) =>
             )
         )
     ].filter(isValidIdentifier)
+    let newCode = `({${variableNames.join(", ")}})=>((async function() {"use strict"; ${code}
+        ;})())`
+    console.debug(`code is:`,newCode)
     let cellAsFunction
     try {
         // run a non-local eval, so there are no variable leaks
-        cellAsFunction = eval?.(`({${variableNames.join(", ")}})=>((async function() {"use strict"; ${code}
-        ;})())`)
+        cellAsFunction = eval?.(newCode)
     } catch (error) {
-        console.debug(`error is:`,error)
-        console.debug(`error.stack is:`,error.stack)
         // basically only syntax errors are possible here
         return {
             syntaxError: error,
@@ -123,9 +123,6 @@ export const runCode = async ({ code, runtime, outputElement, cellNumber=0 }) =>
     try {
         Object.assign(runtime, await cellAsFunction(runtime))
     } catch (error) {
-        // TODO: handle error
-        console.debug(`error is:`,error)
-        console.debug(`error.stack is:`,error.stack.replace(/@http:\/\/localhost:.+ eval:/g, `cell: ${cellNumber}:`))
         return {
             runtimeError: error,
         }

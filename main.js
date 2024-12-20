@@ -27,6 +27,30 @@ const { themeToExtension } = CM["@jeff-hykin/theme-tools"]
 window.CM = CM
 
 import { makeRuntime, runCode } from "./tools/js_runtime.js"
+
+// TODO:
+    // DONE: get console.log to show up in $out
+    // make a save-yaml button  (body.innerHTML save to file)
+    // file drag-and-drop
+        // DONE: event handling
+        // DONE: add to runtime
+        // get working on body drag-and-drop
+    // persist page reload
+        // DONE: edited data stays in sync with yamlData
+        // generate cells and runtime from a yaml
+        // debounce save-to-local-storage
+    // run code experince
+        // DONE: show output
+        // DONE: show runtime/syntax errors
+        // DONE: auto-export some variables
+        // fix pathing line-highlighting of errors
+        // detect top level destructured variable names
+        // convert export statements to return aggregation
+        // use tree sitter to get the line number of syntax errors
+    // add filesystem
+    // image renderer
+    // theme system
+
 let runtime = makeRuntime()
 window.yamlData = {
     settings: {
@@ -47,26 +71,6 @@ window.yamlData = {
     ]
 }
 
-
-// TODO:
-    // DONE: get console.log to show up in $out
-    // make a save-html button  (body.innerHTML save to file)
-    // file drag-and-drop
-        // DONE: event handling
-        // DONE: add to runtime
-        // get working on body drag-and-drop
-    // persist page reload
-        // generate cells and runtime from a yaml
-        // debounce save-to-local-storage
-    // run code experince
-        // DONE: show output
-        // DONE: show runtime/syntax errors
-        // DONE: auto-export some variables
-        // fix pathing line-highlighting of errors
-        // detect top level destructured variable names
-        // convert export statements to return aggregation
-    // add filesystem
-    // image renderer
 
 // 
 // 
@@ -187,7 +191,22 @@ window.yamlData = {
                     outputElement: outputArea,
                 })
                 const formatError = (error)=>{
-                    return error.stack.replace(/@https?:\/\/localhost:.+( eval)?(?=:\d+:\d+)/g, ` line`).split(/\n/g,).map(line=>html`<p>${line}</p>`)
+                    let errorString = (error?.stack||error.message)
+                    errorString = errorString.replace(/@https?:(localhost)?.+ > eval:/g, `line `)
+                    errorString = errorString.replace(/(runCode|onRun|run|Editor|Cell|loadFromYaml|loadFromYaml\/<)@http:\/\/.+\n?/g, ``)
+                    errorString = errorString.replace(/(f|im|keydown|Md\/<|runHandlers|handleEvent|EventListener\.handleEvent\*ensureHandlers|O)@https:\/\/esm\.sh\/.+codemirror_esm@.+\n?/g, ``)
+                        // onRun@http://localhost:5173/main.js:187:61
+                        // onRun@http://localhost:5173/main.js:169:30
+                        // run@http://localhost:5173/main.js:339:36
+                        // f@https://esm.sh/v135/gh/jeff-hykin/codemirror_esm@0.0.2.0/es2022/main.js:19:20617
+                        // im@https://esm.sh/v135/gh/jeff-hykin/codemirror_esm@0.0.2.0/es2022/main.js:19:20742
+                        // keydown@https://esm.sh/v135/gh/jeff-hykin/codemirror_esm@0.0.2.0/es2022/main.js:19:18821
+                        // Editor@http://localhost:5173/main.js:312:22
+                        // Cell@http://localhost:5173/main.js:166:28
+                        // loadFromYaml/<@http://localhost:5173/main.js:425:62
+                        // loadFromYaml@http://localhost:5173/main.js:425:48
+                        // @http://localhost:5173/main.js:437:17
+                    return errorString.split(/\n/g,).map(line=>html`<p>${line}</p>`)
                 }
                 if (runtimeError) {
                     outputArea.append(
@@ -381,6 +400,21 @@ window.yamlData = {
         >
             Save HTML
     </Button>`
+    const YamlDownloadButton = ()=>html`<Button
+        style="position:fixed;top:1rem;right:1rem;z-index:10;border-radius:1em;box-shadow:0 4px 5px 0 rgba(0,0,0,0.14), 0 1px 10px 0 rgba(0,0,0,0.12), 0 2px 4px -1px rgba(0,0,0,0.3); cursor:pointer;" 
+        onclick=${()=>{
+            const data = yaml.stringify(yamlData)
+            const blob = new Blob([data], {type: "text/yaml;charset=utf-8"})
+            const url = URL.createObjectURL(blob)
+            const a = document.createElement("a")
+            a.href = url
+            a.download = "notebook.nb.yaml"
+            a.click()
+            setTimeout(()=>URL.revokeObjectURL(url), 1000)
+        }}
+        >
+            Save Yaml
+    </Button>`
 
 // 
 // setup
@@ -391,6 +425,11 @@ window.yamlData = {
         Editor,
         Cell,
     })
+    const cellContainer = html`<Column name="CellContainer" width="100%" position="relative"></Column>`
+    const loadFromYaml = async (yamlData)=>{
+        removeAllChildElements(cellContainer)
+        document.body.append(...yamlData.cells.map(cell=>Cell(cell)))
+    }
 
 // 
 // body
@@ -398,7 +437,7 @@ window.yamlData = {
     let lineHeight = `1.5em`
     document.body = html`
         <body font-size=15px background-color=#272c35 color=whitesmoke overflow=scroll width=100vw padding=0 margin=0>
-            ${HtmlDownloadButton()}
-            ${yamlData.cells.map(cell=>Cell(cell))}
+            ${YamlDownloadButton()}
         </body>
     `
+    loadFromYaml(yamlData)
