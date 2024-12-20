@@ -28,6 +28,24 @@ window.CM = CM
 
 import { makeRuntime, runCode } from "./tools/js_runtime.js"
 let runtime = makeRuntime()
+window.yamlData = {
+    settings: {
+    },
+    cells: [
+        {
+            cellId: Math.random(),
+            type: "file",
+            filePath: "test.js",
+            coreContent: "howdy howdy",
+            varName: "test",
+        },
+        {
+            cellId: Math.random(),
+            type: "jsCode",
+            coreContent: "console.log('howdy')\n\n\n\n",
+        },
+    ]
+}
 
 
 // TODO:
@@ -40,10 +58,14 @@ let runtime = makeRuntime()
     // persist page reload
         // generate cells and runtime from a yaml
         // debounce save-to-local-storage
-    // save and load to yaml file (code and HTML output)
-    // detect top level destructured variable names
+    // run code experince
+        // DONE: show output
+        // DONE: show runtime/syntax errors
+        // DONE: auto-export some variables
+        // fix pathing line-highlighting of errors
+        // detect top level destructured variable names
+        // convert export statements to return aggregation
     // add filesystem
-    // drag-and-drop text file loader
     // image renderer
 
 // 
@@ -62,7 +84,25 @@ let runtime = makeRuntime()
         passAlongProps(element, props)
         return element
     }
-    function Cell({type, filePath, coreContent, varName, style, }={}) {
+    function Cell({cellId, type, filePath, coreContent, varName, style, }={}) {
+        const getCellData = ()=>{
+            for (const each of yamlData.cells) {
+                if (each.cellId == cellId) {
+                    return each
+                }
+            }
+            return {}
+        }
+        const removeCellData = ()=>{
+            let index = -1
+            for (const each of yamlData.cells) {
+                index++
+                if (each.cellId == cellId) {
+                    yamlData.cells.splice(index, 1)
+                    break
+                }
+            }
+        }
         const element = html`<Column name="Cell" border-top="2px solid #546E7A" width="100%" position="relative"></Column>`
         element.transistion = `all 0.2s ease-in-out`
         const dropStyleChanger = (isDroppping)=>{
@@ -97,47 +137,36 @@ let runtime = makeRuntime()
                         promptMessage = `Sorry ${JSON.stringify(varName)} is not a valid identifier. What variable should I assign to this file?`
                     }
                 }
+                const afterLoaded = (data)=>{
+                    runtime[varName] = data
+                    const newCellData = { cellId: Math.random(), type: "file", filePath: fileObject.name, coreContent: data, varName}
+                    let index = -1
+                    for (const each of yamlData.cells) {
+                        index++
+                        if (each.cellId == cellId) {
+                            yamlData.cells.splice(index, 0, newCellData)
+                            break
+                        }
+                    }
+                    element.insertAdjacentElement("beforebegin", Cell(newCellData))
+                }
+                    
                 if (fileObject.type.startsWith("text/")) {
-                    fileObject.text().then(text=>{
-                        runtime[varName] = text
-                        element.insertAdjacentElement("beforebegin", Cell({type: "file", filePath: fileObject.name, coreContent: text, varName}))
-                    })
+                    fileObject.text().then(afterLoaded)
                 } else {
-                    fileObject.arrayBuffer().then(data=>new Uint8Array(data)).then(data=>{
-                        runtime[varName] = data
-                        element.insertAdjacentElement("beforebegin", Cell({type: "file", filePath: fileObject.name, coreContent: data, varName}))
-                    })
+                    fileObject.arrayBuffer().then(data=>new Uint8Array(data)).then(afterLoaded)
                 }
             }
-            // const items = event.dataTransfer.items
-            // if (fileInfos.length == 1) {
-            //     globalThis.file = file
-            // }
-            // for (let [info, item] of zip(fileInfos, items)) {
-            //     if (item.kind === "file") {
-            //         var data = new Uint8Array(await info.arrayBuffer()) 
-            //         const file = item.getAsFile()
-            //         console.debug(`file is:`,file)
-            //         globalThis.file = file
-            //     }
-            // }
-            // if (files.length == 1) { 
-            //     globalThis.data = event
-            // } else if (files.length > 0) {
-            //     // Display the file names
-            //     Array.from(files).forEach(file => {
-            //         const listItem = document.createElement('li')
-            //         listItem.textContent = file.name
-            //         fileList.appendChild(listItem)
-            //     })
-            // }
         })
         let onRun = () => {}
         if (type == "jsCode") {
             const editor = new Editor({
                 initialText: coreContent,
                 width: "100%",
-                onRun: () => onRun()
+                onRun: () => onRun(),
+                onChange: () => {
+                    getCellData().coreContent = editor.code
+                },
             })
             const outputArea = html`<Column
                 font-family="monospace"
@@ -185,12 +214,28 @@ let runtime = makeRuntime()
                 html`<Row gap=0.5em padding=1em justify-content=center width="100%">
                     <BasicButton
                         onclick=${(event)=>{
-                            element.insertAdjacentElement("afterend", Cell({type: "jsCode", coreContent: "\n\n\n\n"}))
+                            const newCellData = {
+                                cellId: Math.random(),
+                                type: "jsCode",
+                                coreContent: "\n\n\n\n",
+                            }
+                            let index = -1
+                            for (const each of yamlData.cells) {
+                                index++
+                                if (each.cellId == cellId) {
+                                    yamlData.cells.splice(index+1, 0, newCellData)
+                                    break
+                                }
+                            }
+                            element.insertAdjacentElement("afterend", Cell(newCellData))
                         }}>
                             add JS cell
                     </BasicButton>
                     <BasicButton background-color=turquoise onClick=${onRun}>run</BasicButton>
-                    <BasicButton background-color=salmon onClick=${()=>{element.remove()}}>delete (above)</BasicButton>
+                    <BasicButton background-color=salmon onClick=${()=>{
+                        removeCellData()
+                        element.remove()
+                        }}>delete (above)</BasicButton>
                 </Row>`
             )
         } else if (type == "file") {
@@ -216,19 +261,35 @@ let runtime = makeRuntime()
                 html`<Row gap=0.5em padding=1em justify-content=center width="100%">
                     <BasicButton
                         onclick=${(event)=>{
-                            element.insertAdjacentElement("afterend", Cell({type: "jsCode", coreContent: "\n\n\n\n"}))
+                            const newCellData = {
+                                cellId: Math.random(),
+                                type: "jsCode",
+                                coreContent: "\n\n\n\n",
+                            }
+                            let index = -1
+                            for (const each of yamlData.cells) {
+                                index++
+                                if (each.cellId == cellId) {
+                                    yamlData.cells.splice(index+1, 0, newCellData)
+                                    break
+                                }
+                            }
+                            element.insertAdjacentElement("afterend", Cell(newCellData))
                         }}>
                             add JS cell
                     </BasicButton>
-                    <BasicButton background-color=salmon onClick=${()=>{element.remove()}}>delete (above)</BasicButton>
+                    <BasicButton background-color=salmon onClick=${()=>{
+                        removeCellData()
+                        element.remove()
+                        }}>delete (above)</BasicButton>
                 </Row>`
             )
         } else if (type == "markdown") {
-            // FIXME: file
+            // FIXME: 
         } else if (type == "pseudoShCode") {
-            // FIXME: file
+            // FIXME: 
         } else if (type == "pyCode") {
-            // FIXME: file
+            // FIXME: 
         }
         mergeStyles(element, style)
         return element
@@ -281,10 +342,10 @@ let runtime = makeRuntime()
                     // codeChange
                     // 
                     ...(!onChange?[]:
-                        onChange&&EditorView.updateListener.of((update)=>{
+                        [EditorView.updateListener.of((update)=>{
                             // const codeString = editor.state.doc.text.join("\n")
                             onChange&&onChange()
-                        })
+                        })]
                     ),
                 ],
             }),
@@ -338,6 +399,6 @@ let runtime = makeRuntime()
     document.body = html`
         <body font-size=15px background-color=#272c35 color=whitesmoke overflow=scroll width=100vw padding=0 margin=0>
             ${HtmlDownloadButton()}
-            <Cell type="jsCode" coreContent="console.log('howdy')\n\n\n\n" />
+            ${yamlData.cells.map(cell=>Cell(cell))}
         </body>
     `
