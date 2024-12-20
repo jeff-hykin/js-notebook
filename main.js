@@ -25,8 +25,9 @@ const { javascript } = CM["@codemirror/lang-javascript"]
 const { tags: t } = CM['@lezer/highlight']
 const { themeToExtension } = CM["@jeff-hykin/theme-tools"]
 window.CM = CM
-
-
+import * as danfo from 'https://esm.sh/danfojs@1.1.2/dist/danfojs-browser/src/index.js?dev'
+window.danfo = danfo
+// https://github.com/nhn/tui.editor
 import { Editor as MarkdownEditor,} from 'https://esm.sh/@toast-ui/editor@3.2.2'
 // import 'https://esm.sh/@toast-ui/editor/dist/toastui-editor.css'
 
@@ -41,18 +42,24 @@ import { makeRuntime, runCode } from "./tools/js_runtime.js"
         // DONE: event handling
         // DONE: add to runtime
         // get working on body drag-and-drop
+        // only preview part of the file string to save on memory
     // persist page reload
         // DONE: edited data stays in sync with yamlData
         // generate cells and runtime from a yaml
         // debounce save-to-local-storage
+        // save html output in the yaml
     // run code experince
         // DONE: show output
         // DONE: show runtime/syntax errors
         // DONE: auto-export some variables
+        // add a loader/spinner for cells
         // fix pathing line-highlighting of errors
         // detect top level destructured variable names
         // convert export statements to return aggregation
         // use tree sitter to get the line number of syntax errors
+    // create a lockfile of unspecified imports
+        // resolve them to their versioned esm urls
+        // add hash of data to lockfile
     // add filesystem
     // image renderer
     // theme system
@@ -146,6 +153,7 @@ const saveYamlChanges = ()=>{
             const fileObjects = event.dataTransfer.files
             if (fileObjects.length == 1) {
                 const fileObject = fileObjects[0]
+                console.debug(`fileObject is:`,fileObject)
                 const [ folders, itemName, itemExtensionWithDot ] = pathPieces(fileObject.name)
                 let varName = toCamelCase(itemName)
                 let promptMessage = `What variable should I assign to this file?`
@@ -171,7 +179,7 @@ const saveYamlChanges = ()=>{
                     element.insertAdjacentElement("beforebegin", Cell(newCellData))
                     saveYamlChanges()
                 }
-                    
+                console.debug(`fileObject is:`,fileObject)
                 if (fileObject.type.startsWith("text/")) {
                     fileObject.text().then(afterLoaded)
                 } else {
@@ -299,6 +307,8 @@ const saveYamlChanges = ()=>{
                 </Row>`
             )
         } else if (type == "file") {
+            // FIXME: this won't work with binary files
+            runtime[varName] = coreContent
             const outputArea = html`<Column
                 font-family="monospace"
                 fontSize=0.8em
@@ -307,6 +317,7 @@ const saveYamlChanges = ()=>{
                 padding="0.5rem"
                 overflow="auto"
                 max-height="20em"
+                white-space="pre"
                 >
                     ${typeof coreContent == "string"?coreContent:`[${coreContent.length} bytes]`}
             </Column>`
