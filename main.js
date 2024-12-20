@@ -199,7 +199,6 @@ let runtime = makeRuntime()
                 padding="0.5rem"
                 overflow="auto"
                 max-height="20em"
-                padding-bottom=2em
                 >
                     ${typeof coreContent == "string"?coreContent:`[${coreContent.length} bytes]`}
             </Column>`
@@ -209,6 +208,17 @@ let runtime = makeRuntime()
                     <h4 padding=1em width=100% border-bottom="2px solid #546E7A">${filePath} <code color=cornflowerblue>(${varName})</code></h4>
                     ${outputArea}
                 </Column>`
+            )
+            element.append(
+                html`<Row gap=0.5em padding=1em justify-content=center width="100%">
+                    <BasicButton
+                        onclick=${(event)=>{
+                            element.insertAdjacentElement("afterend", Cell({type: "jsCode", coreContent: "\n\n\n\n"}))
+                        }}>
+                            add JS cell
+                    </BasicButton>
+                    <BasicButton background-color=salmon onClick=${()=>{element.remove()}}>delete (above)</BasicButton>
+                </Row>`
             )
         } else if (type == "markdown") {
             // FIXME: file
