@@ -31,7 +31,11 @@ let runtime = makeRuntime()
 
 
 // TODO:
-    // get console.log to show up in $out
+    // DONE: get console.log to show up in $out
+    // file drag-and-drop
+        // DONE: event handling
+        // add to runtime
+        // get working on body drag-and-drop
     // make a save-html button  (body.innerHTML save to file)
     // save and load to yaml file (code and HTML output)
     // detect top level destructured variable names
@@ -55,7 +59,7 @@ let runtime = makeRuntime()
         passAlongProps(element, props)
         return element
     }
-    function Cell({type, filePath, coreContent, style, }={}) {
+    function Cell({type, filePath, coreContent, varName, style, }={}) {
         const element = html`<Column name="Cell" border-top="2px solid #546E7A" width="100%" position="relative"></Column>`
         element.transistion = `all 0.2s ease-in-out`
         const dropStyleChanger = (isDroppping)=>{
@@ -63,6 +67,7 @@ let runtime = makeRuntime()
                 element.style.border = "2px dashed #546E7A"
             } else {
                 element.style.border = "none"
+                element.style.borderTop="2px solid #546E7A"
             }
         }
         element.addEventListener('dragover', (event) => {
@@ -89,15 +94,16 @@ let runtime = makeRuntime()
                         promptMessage = `Sorry ${JSON.stringify(varName)} is not a valid identifier. What variable should I assign to this file?`
                     }
                 }
+                console.debug(`fileObject is:`,fileObject)
                 
                 // check if text file
                 try {
                     fileObject.text().then(text=>{
-                        element.insertAdjacentElement("beforebegin", Cell({type: "file", filePath: fileObject.name, coreContent: text}))
+                        element.insertAdjacentElement("beforebegin", Cell({type: "file", filePath: fileObject.name, coreContent: text, varName}))
                     })
                 } catch (error) {
                     fileObject.arrayBuffer().then(data=>new Uint8Array(data)).then(data=>{
-                        element.insertAdjacentElement("beforebegin", Cell({type: "file", filePath: fileObject.name, coreContent: data}))
+                        element.insertAdjacentElement("beforebegin", Cell({type: "file", filePath: fileObject.name, coreContent: data, varName}))
                     })
                 }
             }
@@ -173,14 +179,36 @@ let runtime = makeRuntime()
                 }
             }
             element.append(editor, outputArea)
+            element.append(
+                html`<Row gap=0.5em padding=1em justify-content=center width="100%">
+                    <BasicButton
+                        onclick=${(event)=>{
+                            element.insertAdjacentElement("afterend", Cell({type: "jsCode", coreContent: "\n\n\n\n"}))
+                        }}>
+                            add JS cell
+                    </BasicButton>
+                    <BasicButton background-color=turquoise onClick=${onRun}>run</BasicButton>
+                    <BasicButton background-color=salmon onClick=${()=>{element.remove()}}>delete (above)</BasicButton>
+                </Row>`
+            )
         } else if (type == "file") {
+            const outputArea = html`<Column
+                font-family="monospace"
+                fontSize=0.8em
+                background="#546E7A"
+                width="100%"
+                padding="0.5rem"
+                overflow="auto"
+                max-height="20em"
+                padding-bottom=2em
+                >
+                    ${typeof coreContent == "string"?coreContent:`[${coreContent.length} bytes]`}
+            </Column>`
             element.append(
                 html`
-                <Column width="100%" height="100%" padding="0.5em">
-                    <h4>${filePath}</h4>
-                    <Code>
-                        ${typeof coreContent == "string"?coreContent:`[${coreContent.length} bytes]`}
-                    </Code>
+                <Column width="100%" height="100%">
+                    <h4 padding=1em width=100% border-bottom="2px solid #546E7A">${filePath} <code color=cornflowerblue>(${varName})</code></h4>
+                    ${outputArea}
                 </Column>`
             )
         } else if (type == "markdown") {
@@ -190,18 +218,6 @@ let runtime = makeRuntime()
         } else if (type == "pyCode") {
             // FIXME: file
         }
-        element.append(
-            html`<Row gap=0.5em padding=1em justify-content=center width="100%">
-                <BasicButton
-                    onclick=${(event)=>{
-                        element.insertAdjacentElement("afterend", Cell({type: "jsCode", coreContent: "\n\n\n\n"}))
-                    }}>
-                        add JS cell
-                </BasicButton>
-                <BasicButton background-color=turquoise onClick=${onRun}>run</BasicButton>
-                <BasicButton background-color=salmon onClick=${()=>{element.remove()}}>delete (above)</BasicButton>
-            </Row>`
-        )
         mergeStyles(element, style)
         return element
     }
