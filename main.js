@@ -4,10 +4,10 @@ import { css, components, Column, Row, askForFiles, Code, Input, Button, Checkbo
 import { fadeIn, fadeOut } from "https://esm.sh/gh/jeff-hykin/good-component@0.3.0/main/animations.js"
 import { showToast } from "https://esm.sh/gh/jeff-hykin/good-component@0.3.0/main/actions.js"
 import { addDynamicStyleFlags, setupStyles, createCssClass, setupClassStyles, hoverStyleHelper, combineClasses, mergeStyles, AfterSilent, removeAllChildElements } from "https://esm.sh/gh/jeff-hykin/good-component@0.3.0/main/helpers.js"
-import { zip, enumerate, count, permute, combinations, wrapAroundGet } from "https://esm.sh/gh/jeff-hykin/good-js@1.13.4.0/source/array.js"
-import { toCamelCase } from "https://esm.sh/gh/jeff-hykin/good-js@1.13.4.0/source/flattened/to_camel_case.js"
-import { pathPieces } from "https://esm.sh/gh/jeff-hykin/good-js@1.13.4.0/source/flattened/path_pieces.js"
-import { isValidIdentifier } from "https://esm.sh/gh/jeff-hykin/good-js@1.13.4.0/source/flattened/is_valid_identifier.js"
+import { zip, enumerate, count, permute, combinations, wrapAroundGet } from "https://esm.sh/gh/jeff-hykin/good-js@1.13.5.1/source/array.js"
+import { toCamelCase } from "https://esm.sh/gh/jeff-hykin/good-js@1.13.5.1/source/flattened/to_camel_case.js"
+import { pathPieces } from "https://esm.sh/gh/jeff-hykin/good-js@1.13.5.1/source/flattened/path_pieces.js"
+import { isValidIdentifier } from "https://esm.sh/gh/jeff-hykin/good-js@1.13.5.1/source/flattened/is_valid_identifier.js"
 // import { deepCopy, deepCopySymbol, allKeyDescriptions, deepSortObject, shallowSortObject, isGeneratorObject,isAsyncIterable, isSyncIterable, isIterableTechnically, isSyncIterableObjectOrContainer, allKeys } from "https://deno.land/x/good@1.13.2.0/value.js"
 import { deepCopy, deepCopySymbol, allKeyDescriptions, deepSortObject, shallowSortObject, isGeneratorObject,isAsyncIterable, isSyncIterable, isIterableTechnically, isSyncIterableObjectOrContainer, allKeys } from "https://esm.sh/gh/jeff-hykin/good-js@1.13.2.0/source/value.js"
 import { dump, load } from "https://esm.sh/js-yaml@4.1.0/"
@@ -77,24 +77,26 @@ let runtime = makeRuntime()
             dropStyleChanger(false)
             const fileObjects = event.dataTransfer.files
             if (fileObjects.length == 1) {
-                // const fileObject = fileObjects[0]
-                // const [ folders, itemName, itemExtensionWithDot ] = pathPieces(fileObject.name)
-                // let varName = toCamelCase(itemName)
-                // while (1) {
-                //     if (isValidIdentifier(varName)) {
-                //         if (confirm(`should I `)) {
-                //     }
-                    
-                // }
+                const fileObject = fileObjects[0]
+                const [ folders, itemName, itemExtensionWithDot ] = pathPieces(fileObject.name)
+                var varName = toCamelCase(itemName)
+                let promptMessage = `What variable should I assign to this file?`
+                while (1) {
+                    varName = prompt(promptMessage, varName)
+                    if (isValidIdentifier(varName)) {
+                        break
+                    } else {
+                        promptMessage = `Sorry ${JSON.stringify(varName)} is not a valid identifier. What variable should I assign to this file?`
+                    }
+                }
                 
-                prompt("What variable should I assign to this file?")
                 // check if text file
                 try {
                     fileObject.text().then(text=>{
                         element.insertAdjacentElement("beforebegin", Cell({type: "file", filePath: fileObject.name, coreContent: text}))
                     })
                 } catch (error) {
-                    fileObjects.arrayBuffer().then(data=>new Uint8Array(data)).then(data=>{
+                    fileObject.arrayBuffer().then(data=>new Uint8Array(data)).then(data=>{
                         element.insertAdjacentElement("beforebegin", Cell({type: "file", filePath: fileObject.name, coreContent: data}))
                     })
                 }
@@ -288,7 +290,7 @@ let runtime = makeRuntime()
 // 
     let lineHeight = `1.5em`
     document.body = html`
-        <body font-size=15px background-color=#272c35 overflow=scroll width=100vw padding=0 margin=0>
+        <body font-size=15px background-color=#272c35 color=whitesmoke overflow=scroll width=100vw padding=0 margin=0>
             <Cell type="jsCode" coreContent="console.log('howdy')\n\n\n\n" />
         </body>
     `
