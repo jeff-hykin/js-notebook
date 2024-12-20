@@ -84,7 +84,7 @@ let runtime = makeRuntime()
             if (fileObjects.length == 1) {
                 const fileObject = fileObjects[0]
                 const [ folders, itemName, itemExtensionWithDot ] = pathPieces(fileObject.name)
-                var varName = toCamelCase(itemName)
+                let varName = toCamelCase(itemName)
                 let promptMessage = `What variable should I assign to this file?`
                 while (1) {
                     varName = prompt(promptMessage, varName)
@@ -94,15 +94,14 @@ let runtime = makeRuntime()
                         promptMessage = `Sorry ${JSON.stringify(varName)} is not a valid identifier. What variable should I assign to this file?`
                     }
                 }
-                console.debug(`fileObject is:`,fileObject)
-                
-                // check if text file
-                try {
+                if (fileObject.type.startsWith("text/")) {
                     fileObject.text().then(text=>{
+                        runtime[varName] = text
                         element.insertAdjacentElement("beforebegin", Cell({type: "file", filePath: fileObject.name, coreContent: text, varName}))
                     })
-                } catch (error) {
+                } else {
                     fileObject.arrayBuffer().then(data=>new Uint8Array(data)).then(data=>{
+                        runtime[varName] = data
                         element.insertAdjacentElement("beforebegin", Cell({type: "file", filePath: fileObject.name, coreContent: data, varName}))
                     })
                 }
