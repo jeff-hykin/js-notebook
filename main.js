@@ -26,11 +26,17 @@ const { tags: t } = CM['@lezer/highlight']
 const { themeToExtension } = CM["@jeff-hykin/theme-tools"]
 window.CM = CM
 
+
+import { Editor as MarkdownEditor,} from 'https://esm.sh/@toast-ui/editor@3.2.2'
+// import 'https://esm.sh/@toast-ui/editor/dist/toastui-editor.css'
+
 import { makeRuntime, runCode } from "./tools/js_runtime.js"
 
 // TODO:
     // DONE: get console.log to show up in $out
-    // make a save-yaml button  (body.innerHTML save to file)
+    // DONE: make a save-yaml button  (body.innerHTML save to file)
+    // DONE: markdown editor
+        // make shift+enter to go to the next editable cell (e.g. markdown or code)
     // file drag-and-drop
         // DONE: event handling
         // DONE: add to runtime
@@ -66,6 +72,11 @@ window.yamlData = storageObject.yamlData || {
         {
             cellId: Math.random(),
             type: "jsCode",
+            coreContent: "console.log('howdy')\n\n\n\n",
+        },
+        {
+            cellId: Math.random(),
+            type: "markdown",
             coreContent: "console.log('howdy')\n\n\n\n",
         },
     ]
@@ -260,6 +271,26 @@ const saveYamlChanges = ()=>{
                         }}>
                             add JS cell
                     </BasicButton>
+                    <BasicButton
+                        onclick=${(event)=>{
+                            const newCellData = {
+                                cellId: Math.random(),
+                                type: "markdown",
+                                coreContent: "",
+                            }
+                            let index = -1
+                            for (const each of yamlData.cells) {
+                                index++
+                                if (each.cellId == cellId) {
+                                    yamlData.cells.splice(index+1, 0, newCellData)
+                                    break
+                                }
+                            }
+                            element.insertAdjacentElement("afterend", Cell(newCellData))
+                            saveYamlChanges()
+                        }}>
+                            add markdown cell
+                    </BasicButton>
                     <BasicButton background-color=turquoise onClick=${onRun}>run</BasicButton>
                     <BasicButton background-color=salmon onClick=${()=>{
                         removeCellData()
@@ -315,7 +346,65 @@ const saveYamlChanges = ()=>{
                 </Row>`
             )
         } else if (type == "markdown") {
-            // FIXME: 
+            let markdownEditor = new MarkdownEditor({
+                el: element,
+                usageStatistics: false,
+                theme: 'dark',
+                initialValue: coreContent,
+                // initialEditType: 'wysiwyg',
+            })
+            markdownEditor.on('change', (value)=>{
+                getCellData().coreContent = markdownEditor.getMarkdown()
+            })
+            element.append(
+                html`<Row gap=0.5em padding=1em justify-content=center width="100%">
+                    <BasicButton
+                        onclick=${(event)=>{
+                            const newCellData = {
+                                cellId: Math.random(),
+                                type: "jsCode",
+                                coreContent: "\n\n\n\n",
+                            }
+                            let index = -1
+                            for (const each of yamlData.cells) {
+                                index++
+                                if (each.cellId == cellId) {
+                                    yamlData.cells.splice(index+1, 0, newCellData)
+                                    break
+                                }
+                            }
+                            element.insertAdjacentElement("afterend", Cell(newCellData))
+                            saveYamlChanges()
+                        }}>
+                            add JS cell
+                    </BasicButton>
+                    <BasicButton
+                        onclick=${(event)=>{
+                            const newCellData = {
+                                cellId: Math.random(),
+                                type: "markdown",
+                                coreContent: "",
+                            }
+                            let index = -1
+                            for (const each of yamlData.cells) {
+                                index++
+                                if (each.cellId == cellId) {
+                                    yamlData.cells.splice(index+1, 0, newCellData)
+                                    break
+                                }
+                            }
+                            element.insertAdjacentElement("afterend", Cell(newCellData))
+                            saveYamlChanges()
+                        }}>
+                            add markdown cell
+                    </BasicButton>
+                    <BasicButton background-color=turquoise onClick=${onRun}>run</BasicButton>
+                    <BasicButton background-color=salmon onClick=${()=>{
+                        removeCellData()
+                        element.remove()
+                        }}>delete (above)</BasicButton>
+                </Row>`
+            )
         } else if (type == "pseudoShCode") {
             // FIXME: 
         } else if (type == "pyCode") {
