@@ -52,7 +52,7 @@ import { makeRuntime, runCode } from "./tools/js_runtime.js"
     // theme system
 
 let runtime = makeRuntime()
-window.yamlData = {
+window.yamlData = storageObject.yamlData || {
     settings: {
     },
     cells: [
@@ -69,6 +69,10 @@ window.yamlData = {
             coreContent: "console.log('howdy')\n\n\n\n",
         },
     ]
+}
+// TODO: debounce
+const saveYamlChanges = ()=>{
+    storageObject.yamlData = yamlData
 }
 
 
@@ -106,6 +110,7 @@ window.yamlData = {
                     break
                 }
             }
+            saveYamlChanges()
         }
         const element = html`<Column name="Cell" border-top="2px solid #546E7A" width="100%" position="relative"></Column>`
         element.transistion = `all 0.2s ease-in-out`
@@ -153,6 +158,7 @@ window.yamlData = {
                         }
                     }
                     element.insertAdjacentElement("beforebegin", Cell(newCellData))
+                    saveYamlChanges()
                 }
                     
                 if (fileObject.type.startsWith("text/")) {
@@ -170,6 +176,7 @@ window.yamlData = {
                 onRun: () => onRun(),
                 onChange: () => {
                     getCellData().coreContent = editor.code
+                    saveYamlChanges()
                 },
             })
             const outputArea = html`<Column
@@ -192,6 +199,7 @@ window.yamlData = {
                 })
                 const formatError = (error)=>{
                     let errorString = (error?.stack||error.message)
+                    // FIXME: this is a bit too agressive of pattern matching. Use window.location.href 
                     errorString = errorString.replace(/@https?:(localhost)?.+ > eval:/g, `line `)
                     errorString = errorString.replace(/(runCode|onRun|run|Editor|Cell|loadFromYaml|loadFromYaml\/<)@http:\/\/.+\n?/g, ``)
                     errorString = errorString.replace(/(f|im|keydown|Md\/<|runHandlers|handleEvent|EventListener\.handleEvent\*ensureHandlers|O)@https:\/\/esm\.sh\/.+codemirror_esm@.+\n?/g, ``)
@@ -247,6 +255,7 @@ window.yamlData = {
                                 }
                             }
                             element.insertAdjacentElement("afterend", Cell(newCellData))
+                            saveYamlChanges()
                         }}>
                             add JS cell
                     </BasicButton>
@@ -294,6 +303,7 @@ window.yamlData = {
                                 }
                             }
                             element.insertAdjacentElement("afterend", Cell(newCellData))
+                            saveYamlChanges()
                         }}>
                             add JS cell
                     </BasicButton>

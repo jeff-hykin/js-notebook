@@ -3,6 +3,18 @@ import { isValidIdentifier } from "https://esm.sh/gh/jeff-hykin/good-js@1.13.1.0
 import { toRepresentation } from "https://esm.sh/gh/jeff-hykin/good-js@1.13.5.0/source/flattened/to_representation.js"
 
 const { console, Math, Date, setTimout, setInterval, clearTimeout, clearInterval, fetch, Uint8Array, Map, Set, URL, WebAssembly, Array, Number, Symbol, Promise, RegExp, Error, document } = globalThis
+const elementLogger = (element, tag, ...args)=>{
+    const el = document.createElement("p")
+    el.classList.add(`console-${tag}`)
+    el.innerText = args.map((each)=>{
+        if (typeof each == "string") {
+            return each
+        } else {
+            return toRepresentation(each)
+        }
+    }).join(" ")
+    element.append(el)
+}
 const consoleElement = {
     $element: null,
     assert: console.assert,
@@ -14,10 +26,7 @@ const consoleElement = {
     dirxml: console.dirxml,
     error: function(...args){
         if (this.$element) {
-            const el = document.createElement("p")
-            el.classList.add("console-error")
-            el.innerText = args.map(toRepresentation).join(" ")
-            this.$element.append(el)
+            elementLogger(this.$element, "error", ...args)
         } else {
             console.error(...args)
         }
@@ -29,10 +38,7 @@ const consoleElement = {
     info: console.info,
     log: function(...args){
         if (this.$element) {
-            const el = document.createElement("p")
-            el.classList.add("console-log")
-            el.innerText = args.map(toRepresentation).join(" ")
-            this.$element.append(el)
+            elementLogger(this.$element, "log", ...args)
         } else {
             console.log(...args)
         }
@@ -47,10 +53,7 @@ const consoleElement = {
     trace: console.trace,
     warn: function(...args){
         if (this.$element) {
-            const el = document.createElement("p")
-            el.classList.add("console-warn")
-            el.innerText = args.map(toRepresentation).join(" ")
-            this.$element.append(el)
+            elementLogger(this.$element, "warn", ...args)
         } else {
             console.warn(...args)
         }
@@ -109,7 +112,7 @@ export const runCode = async ({ code, runtime, outputElement, cellNumber=0 }) =>
     ].filter(isValidIdentifier)
     let newCode = `({${variableNames.join(", ")}})=>((async function() {"use strict"; ${code}
         ;})())`
-    console.debug(`code is:`,newCode)
+    // console.debug(`code is:`,newCode)
     let cellAsFunction
     try {
         // run a non-local eval, so there are no variable leaks
