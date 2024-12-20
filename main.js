@@ -181,6 +181,7 @@ const saveYamlChanges = ()=>{
             })
             const outputArea = html`<Column
                 font-family="monospace"
+                white-space="pre"
                 fontSize=0.8em
                 background="#546E7A"
                 width="100%"
