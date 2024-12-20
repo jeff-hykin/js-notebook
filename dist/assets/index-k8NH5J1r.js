@@ -8,10 +8,11 @@ import { toCamelCase } from 'https://esm.sh/gh/jeff-hykin/good-js@1.13.5.1/sourc
 import { pathPieces } from 'https://esm.sh/gh/jeff-hykin/good-js@1.13.5.1/source/flattened/path_pieces.js';
 import { isValidIdentifier as isValidIdentifier$1 } from 'https://esm.sh/gh/jeff-hykin/good-js@1.13.5.1/source/flattened/is_valid_identifier.js';
 import 'https://esm.sh/gh/jeff-hykin/good-js@1.13.2.0/source/value.js';
-import 'https://esm.sh/js-yaml@4.1.0/';
-import 'https://esm.sh/gh/jeff-hykin/storage-object@0.0.3.5/main.js';
+import { dump, load } from 'https://esm.sh/js-yaml@4.1.0/';
+import storageObject from 'https://esm.sh/gh/jeff-hykin/storage-object@0.0.3.5/main.js';
 import CM from 'https://esm.sh/gh/jeff-hykin/codemirror_esm@0.0.2.0/main.js';
 import atomOne from 'https://esm.sh/gh/jeff-hykin/codemirror_esm@0.0.2.0/themes/atomone.js';
+import { Editor as Editor$1 } from 'https://esm.sh/@toast-ui/editor@3.2.2';
 import { parserFromWasm } from 'https://esm.sh/gh/jeff-hykin/deno-tree-sitter@0.2.8.4/main.js';
 import javascript$1 from 'https://esm.sh/gh/jeff-hykin/common_tree_sitter_languages@1.3.1.1/main/javascript.js';
 import { isValidIdentifier } from 'https://esm.sh/gh/jeff-hykin/good-js@1.13.1.0/source/flattened/is_valid_identifier.js';
@@ -316,7 +317,19 @@ function convertImports(code) {
     return output + `;return {${stuffToExport.join(",")}}`
 }
 
-const { console: console$1, Math, Date, setTimout, setInterval, clearTimeout, clearInterval, fetch: fetch$1, Uint8Array: Uint8Array$1, Map, Set, URL: URL$1, WebAssembly, Array, Number, Symbol: Symbol$1, Promise: Promise$1, RegExp, Error: Error$1, document: document$1 } = globalThis;
+const { console: console$1, Math: Math$1, Date, setTimout, setInterval, clearTimeout, clearInterval, fetch: fetch$1, Uint8Array: Uint8Array$1, Map, Set, URL: URL$1, WebAssembly, Array, Number, Symbol: Symbol$1, Promise: Promise$1, RegExp, Error: Error$1, document: document$1 } = globalThis;
+const elementLogger = (element, tag, ...args)=>{
+    const el = document$1.createElement("p");
+    el.classList.add(`console-${tag}`);
+    el.innerText = args.map((each)=>{
+        if (typeof each == "string") {
+            return each
+        } else {
+            return toRepresentation(each)
+        }
+    }).join(" ");
+    element.append(el);
+};
 const consoleElement = {
     $element: null,
     assert: console$1.assert,
@@ -328,10 +341,7 @@ const consoleElement = {
     dirxml: console$1.dirxml,
     error: function(...args){
         if (this.$element) {
-            const el = document$1.createElement("p");
-            el.classList.add("console-error");
-            el.innerText = args.map(toRepresentation).join(" ");
-            this.$element.append(el);
+            elementLogger(this.$element, "error", ...args);
         } else {
             console$1.error(...args);
         }
@@ -343,10 +353,7 @@ const consoleElement = {
     info: console$1.info,
     log: function(...args){
         if (this.$element) {
-            const el = document$1.createElement("p");
-            el.classList.add("console-log");
-            el.innerText = args.map(toRepresentation).join(" ");
-            this.$element.append(el);
+            elementLogger(this.$element, "log", ...args);
         } else {
             console$1.log(...args);
         }
@@ -361,10 +368,7 @@ const consoleElement = {
     trace: console$1.trace,
     warn: function(...args){
         if (this.$element) {
-            const el = document$1.createElement("p");
-            el.classList.add("console-warn");
-            el.innerText = args.map(toRepresentation).join(" ");
-            this.$element.append(el);
+            elementLogger(this.$element, "warn", ...args);
         } else {
             console$1.warn(...args);
         }
@@ -373,7 +377,7 @@ const consoleElement = {
 const builtins = {
     "console": consoleElement,
     "Math": {
-        random: ()=>Math.random(),
+        random: ()=>Math$1.random(),
     },
     "require": (path)=>{
         if (path.startsWith("https://") || path.startsWith("http://")) {
@@ -421,14 +425,14 @@ const runCode = async ({ code, runtime, outputElement, cellNumber=0 }) => {
             )
         )
     ].filter(isValidIdentifier);
+    let newCode = `({${variableNames.join(", ")}})=>((async function() {"use strict"; ${code}
+        ;})())`;
+    // console.debug(`code is:`,newCode)
     let cellAsFunction;
     try {
         // run a non-local eval, so there are no variable leaks
-        cellAsFunction = eval?.(`({${variableNames.join(", ")}})=>((async function() {"use strict"; ${code}
-        ;})())`);
+        cellAsFunction = eval?.(newCode);
     } catch (error) {
-        console$1.debug(`error is:`,error);
-        console$1.debug(`error.stack is:`,error.stack);
         // basically only syntax errors are possible here
         return {
             syntaxError: error,
@@ -437,15 +441,14 @@ const runCode = async ({ code, runtime, outputElement, cellNumber=0 }) => {
     try {
         Object.assign(runtime, await cellAsFunction(runtime));
     } catch (error) {
-        // TODO: handle error
-        console$1.debug(`error is:`,error);
-        console$1.debug(`error.stack is:`,error.stack.replace(/@http:\/\/localhost:.+ eval:/g, `cell: ${cellNumber}:`));
         return {
             runtimeError: error,
         }
     }
     return {}
 };
+
+const yaml = { stringify: dump, parse: load };
 
 const { basicSetup } = CM["codemirror"];
 const { EditorView, keymap } = CM["@codemirror/view"];
@@ -454,24 +457,61 @@ const { javascript } = CM["@codemirror/lang-javascript"];
 CM['@lezer/highlight'];
 const { themeToExtension } = CM["@jeff-hykin/theme-tools"];
 window.CM = CM;
-let runtime = makeRuntime();
-
 
 // TODO:
     // DONE: get console.log to show up in $out
-    // make a save-html button  (body.innerHTML save to file)
+    // DONE: make a save-yaml button  (body.innerHTML save to file)
+    // DONE: markdown editor
+        // make shift+enter to go to the next editable cell (e.g. markdown or code)
     // file drag-and-drop
         // DONE: event handling
         // DONE: add to runtime
         // get working on body drag-and-drop
     // persist page reload
+        // DONE: edited data stays in sync with yamlData
         // generate cells and runtime from a yaml
         // debounce save-to-local-storage
-    // save and load to yaml file (code and HTML output)
-    // detect top level destructured variable names
+    // run code experince
+        // DONE: show output
+        // DONE: show runtime/syntax errors
+        // DONE: auto-export some variables
+        // fix pathing line-highlighting of errors
+        // detect top level destructured variable names
+        // convert export statements to return aggregation
+        // use tree sitter to get the line number of syntax errors
     // add filesystem
-    // drag-and-drop text file loader
     // image renderer
+    // theme system
+
+let runtime = makeRuntime();
+window.yamlData = storageObject.yamlData || {
+    settings: {
+    },
+    cells: [
+        {
+            cellId: Math.random(),
+            type: "file",
+            filePath: "test.js",
+            coreContent: "howdy howdy",
+            varName: "test",
+        },
+        {
+            cellId: Math.random(),
+            type: "jsCode",
+            coreContent: "console.log('howdy')\n\n\n\n",
+        },
+        {
+            cellId: Math.random(),
+            type: "markdown",
+            coreContent: "console.log('howdy')\n\n\n\n",
+        },
+    ]
+};
+// TODO: debounce
+const saveYamlChanges = ()=>{
+    storageObject.yamlData = yamlData;
+};
+
 
 // 
 // 
@@ -489,7 +529,26 @@ let runtime = makeRuntime();
         passAlongProps(element, props);
         return element
     }
-    function Cell({type, filePath, coreContent, varName, style, }={}) {
+    function Cell({cellId, type, filePath, coreContent, varName, style, }={}) {
+        const getCellData = ()=>{
+            for (const each of yamlData.cells) {
+                if (each.cellId == cellId) {
+                    return each
+                }
+            }
+            return {}
+        };
+        const removeCellData = ()=>{
+            let index = -1;
+            for (const each of yamlData.cells) {
+                index++;
+                if (each.cellId == cellId) {
+                    yamlData.cells.splice(index, 1);
+                    break
+                }
+            }
+            saveYamlChanges();
+        };
         const element = html`<Column name="Cell" border-top="2px solid #546E7A" width="100%" position="relative"></Column>`;
         element.transistion = `all 0.2s ease-in-out`;
         const dropStyleChanger = (isDroppping)=>{
@@ -524,50 +583,42 @@ let runtime = makeRuntime();
                         promptMessage = `Sorry ${JSON.stringify(varName)} is not a valid identifier. What variable should I assign to this file?`;
                     }
                 }
+                const afterLoaded = (data)=>{
+                    runtime[varName] = data;
+                    const newCellData = { cellId: Math.random(), type: "file", filePath: fileObject.name, coreContent: data, varName};
+                    let index = -1;
+                    for (const each of yamlData.cells) {
+                        index++;
+                        if (each.cellId == cellId) {
+                            yamlData.cells.splice(index, 0, newCellData);
+                            break
+                        }
+                    }
+                    element.insertAdjacentElement("beforebegin", Cell(newCellData));
+                    saveYamlChanges();
+                };
+                    
                 if (fileObject.type.startsWith("text/")) {
-                    fileObject.text().then(text=>{
-                        runtime[varName] = text;
-                        element.insertAdjacentElement("beforebegin", Cell({type: "file", filePath: fileObject.name, coreContent: text, varName}));
-                    });
+                    fileObject.text().then(afterLoaded);
                 } else {
-                    fileObject.arrayBuffer().then(data=>new Uint8Array(data)).then(data=>{
-                        runtime[varName] = data;
-                        element.insertAdjacentElement("beforebegin", Cell({type: "file", filePath: fileObject.name, coreContent: data, varName}));
-                    });
+                    fileObject.arrayBuffer().then(data=>new Uint8Array(data)).then(afterLoaded);
                 }
             }
-            // const items = event.dataTransfer.items
-            // if (fileInfos.length == 1) {
-            //     globalThis.file = file
-            // }
-            // for (let [info, item] of zip(fileInfos, items)) {
-            //     if (item.kind === "file") {
-            //         var data = new Uint8Array(await info.arrayBuffer()) 
-            //         const file = item.getAsFile()
-            //         console.debug(`file is:`,file)
-            //         globalThis.file = file
-            //     }
-            // }
-            // if (files.length == 1) { 
-            //     globalThis.data = event
-            // } else if (files.length > 0) {
-            //     // Display the file names
-            //     Array.from(files).forEach(file => {
-            //         const listItem = document.createElement('li')
-            //         listItem.textContent = file.name
-            //         fileList.appendChild(listItem)
-            //     })
-            // }
         });
         let onRun = () => {};
         if (type == "jsCode") {
             const editor = new Editor({
                 initialText: coreContent,
                 width: "100%",
-                onRun: () => onRun()
+                onRun: () => onRun(),
+                onChange: () => {
+                    getCellData().coreContent = editor.code;
+                    saveYamlChanges();
+                },
             });
             const outputArea = html`<Column
                 font-family="monospace"
+                white-space="pre"
                 fontSize=0.8em
                 background="#546E7A"
                 width="100%"
@@ -585,7 +636,23 @@ let runtime = makeRuntime();
                     outputElement: outputArea,
                 });
                 const formatError = (error)=>{
-                    return error.stack.replace(/@https?:\/\/localhost:.+( eval)?(?=:\d+:\d+)/g, ` line`).split(/\n/g,).map(line=>html`<p>${line}</p>`)
+                    let errorString = (error?.stack||error.message);
+                    // FIXME: this is a bit too agressive of pattern matching. Use window.location.href 
+                    errorString = errorString.replace(/@https?:(localhost)?.+ > eval:/g, `line `);
+                    errorString = errorString.replace(/(runCode|onRun|run|Editor|Cell|loadFromYaml|loadFromYaml\/<)@http:\/\/.+\n?/g, ``);
+                    errorString = errorString.replace(/(f|im|keydown|Md\/<|runHandlers|handleEvent|EventListener\.handleEvent\*ensureHandlers|O)@https:\/\/esm\.sh\/.+codemirror_esm@.+\n?/g, ``);
+                        // onRun@http://localhost:5173/main.js:187:61
+                        // onRun@http://localhost:5173/main.js:169:30
+                        // run@http://localhost:5173/main.js:339:36
+                        // f@https://esm.sh/v135/gh/jeff-hykin/codemirror_esm@0.0.2.0/es2022/main.js:19:20617
+                        // im@https://esm.sh/v135/gh/jeff-hykin/codemirror_esm@0.0.2.0/es2022/main.js:19:20742
+                        // keydown@https://esm.sh/v135/gh/jeff-hykin/codemirror_esm@0.0.2.0/es2022/main.js:19:18821
+                        // Editor@http://localhost:5173/main.js:312:22
+                        // Cell@http://localhost:5173/main.js:166:28
+                        // loadFromYaml/<@http://localhost:5173/main.js:425:62
+                        // loadFromYaml@http://localhost:5173/main.js:425:48
+                        // @http://localhost:5173/main.js:437:17
+                    return errorString.split(/\n/g,).map(line=>html`<p>${line}</p>`)
                 };
                 if (runtimeError) {
                     outputArea.append(
@@ -612,12 +679,49 @@ let runtime = makeRuntime();
                 html`<Row gap=0.5em padding=1em justify-content=center width="100%">
                     <BasicButton
                         onclick=${(event)=>{
-                            element.insertAdjacentElement("afterend", Cell({type: "jsCode", coreContent: "\n\n\n\n"}));
+                            const newCellData = {
+                                cellId: Math.random(),
+                                type: "jsCode",
+                                coreContent: "\n\n\n\n",
+                            };
+                            let index = -1;
+                            for (const each of yamlData.cells) {
+                                index++;
+                                if (each.cellId == cellId) {
+                                    yamlData.cells.splice(index+1, 0, newCellData);
+                                    break
+                                }
+                            }
+                            element.insertAdjacentElement("afterend", Cell(newCellData));
+                            saveYamlChanges();
                         }}>
                             add JS cell
                     </BasicButton>
+                    <BasicButton
+                        onclick=${(event)=>{
+                            const newCellData = {
+                                cellId: Math.random(),
+                                type: "markdown",
+                                coreContent: "",
+                            };
+                            let index = -1;
+                            for (const each of yamlData.cells) {
+                                index++;
+                                if (each.cellId == cellId) {
+                                    yamlData.cells.splice(index+1, 0, newCellData);
+                                    break
+                                }
+                            }
+                            element.insertAdjacentElement("afterend", Cell(newCellData));
+                            saveYamlChanges();
+                        }}>
+                            add markdown cell
+                    </BasicButton>
                     <BasicButton background-color=turquoise onClick=${onRun}>run</BasicButton>
-                    <BasicButton background-color=salmon onClick=${()=>{element.remove();}}>delete (above)</BasicButton>
+                    <BasicButton background-color=salmon onClick=${()=>{
+                        removeCellData();
+                        element.remove();
+                        }}>delete (above)</BasicButton>
                 </Row>`
             );
         } else if (type == "file") {
@@ -643,11 +747,88 @@ let runtime = makeRuntime();
                 html`<Row gap=0.5em padding=1em justify-content=center width="100%">
                     <BasicButton
                         onclick=${(event)=>{
-                            element.insertAdjacentElement("afterend", Cell({type: "jsCode", coreContent: "\n\n\n\n"}));
+                            const newCellData = {
+                                cellId: Math.random(),
+                                type: "jsCode",
+                                coreContent: "\n\n\n\n",
+                            };
+                            let index = -1;
+                            for (const each of yamlData.cells) {
+                                index++;
+                                if (each.cellId == cellId) {
+                                    yamlData.cells.splice(index+1, 0, newCellData);
+                                    break
+                                }
+                            }
+                            element.insertAdjacentElement("afterend", Cell(newCellData));
+                            saveYamlChanges();
                         }}>
                             add JS cell
                     </BasicButton>
-                    <BasicButton background-color=salmon onClick=${()=>{element.remove();}}>delete (above)</BasicButton>
+                    <BasicButton background-color=salmon onClick=${()=>{
+                        removeCellData();
+                        element.remove();
+                        }}>delete (above)</BasicButton>
+                </Row>`
+            );
+        } else if (type == "markdown") {
+            let markdownEditor = new Editor$1({
+                el: element,
+                usageStatistics: false,
+                theme: 'dark',
+                initialValue: coreContent,
+                // initialEditType: 'wysiwyg',
+            });
+            markdownEditor.on('change', (value)=>{
+                getCellData().coreContent = markdownEditor.getMarkdown();
+            });
+            element.append(
+                html`<Row gap=0.5em padding=1em justify-content=center width="100%">
+                    <BasicButton
+                        onclick=${(event)=>{
+                            const newCellData = {
+                                cellId: Math.random(),
+                                type: "jsCode",
+                                coreContent: "\n\n\n\n",
+                            };
+                            let index = -1;
+                            for (const each of yamlData.cells) {
+                                index++;
+                                if (each.cellId == cellId) {
+                                    yamlData.cells.splice(index+1, 0, newCellData);
+                                    break
+                                }
+                            }
+                            element.insertAdjacentElement("afterend", Cell(newCellData));
+                            saveYamlChanges();
+                        }}>
+                            add JS cell
+                    </BasicButton>
+                    <BasicButton
+                        onclick=${(event)=>{
+                            const newCellData = {
+                                cellId: Math.random(),
+                                type: "markdown",
+                                coreContent: "",
+                            };
+                            let index = -1;
+                            for (const each of yamlData.cells) {
+                                index++;
+                                if (each.cellId == cellId) {
+                                    yamlData.cells.splice(index+1, 0, newCellData);
+                                    break
+                                }
+                            }
+                            element.insertAdjacentElement("afterend", Cell(newCellData));
+                            saveYamlChanges();
+                        }}>
+                            add markdown cell
+                    </BasicButton>
+                    <BasicButton background-color=turquoise onClick=${onRun}>run</BasicButton>
+                    <BasicButton background-color=salmon onClick=${()=>{
+                        removeCellData();
+                        element.remove();
+                        }}>delete (above)</BasicButton>
                 </Row>`
             );
         } else ;
@@ -702,10 +883,10 @@ let runtime = makeRuntime();
                     // codeChange
                     // 
                     ...(!onChange?[]:
-                        onChange&&EditorView.updateListener.of((update)=>{
+                        [EditorView.updateListener.of((update)=>{
                             // const codeString = editor.state.doc.text.join("\n")
                             onChange&&onChange();
-                        })
+                        })]
                     ),
                 ],
             }),
@@ -723,23 +904,20 @@ let runtime = makeRuntime();
         }
         return element
     }
-    // HTML download problems
-        // imports are not loaded (main.js)
-        // styles from classes
-    const HtmlDownloadButton = ()=>html`<Button
+    const YamlDownloadButton = ()=>html`<Button
         style="position:fixed;top:1rem;right:1rem;z-index:10;border-radius:1em;box-shadow:0 4px 5px 0 rgba(0,0,0,0.14), 0 1px 10px 0 rgba(0,0,0,0.12), 0 2px 4px -1px rgba(0,0,0,0.3); cursor:pointer;" 
         onclick=${()=>{
-            const html = document.body.parentElement.outerHTML;
-            const blob = new Blob([html], {type: "text/html;charset=utf-8"});
+            const data = yaml.stringify(yamlData);
+            const blob = new Blob([data], {type: "text/yaml;charset=utf-8"});
             const url = URL.createObjectURL(blob);
             const a = document.createElement("a");
             a.href = url;
-            a.download = "index.html";
+            a.download = "notebook.nb.yaml";
             a.click();
             setTimeout(()=>URL.revokeObjectURL(url), 1000);
         }}
         >
-            Save HTML
+            Save Yaml
     </Button>`;
 
 // 
@@ -751,12 +929,17 @@ let runtime = makeRuntime();
         Editor,
         Cell,
     });
+    const cellContainer = html`<Column name="CellContainer" width="100%" position="relative"></Column>`;
+    const loadFromYaml = async (yamlData)=>{
+        removeAllChildElements(cellContainer);
+        document.body.append(...yamlData.cells.map(cell=>Cell(cell)));
+    };
     document.body = html`
         <body font-size=15px background-color=#272c35 color=whitesmoke overflow=scroll width=100vw padding=0 margin=0>
-            ${HtmlDownloadButton()}
-            <Cell type="jsCode" coreContent="console.log('howdy')\n\n\n\n" />
+            ${YamlDownloadButton()}
         </body>
     `;
+    loadFromYaml(yamlData);
 function __vite__mapDeps(indexes) {
   if (!__vite__mapDeps.viteFileDeps) {
     __vite__mapDeps.viteFileDeps = []
