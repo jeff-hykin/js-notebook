@@ -32,11 +32,14 @@ let runtime = makeRuntime()
 
 // TODO:
     // DONE: get console.log to show up in $out
+    // make a save-html button  (body.innerHTML save to file)
     // file drag-and-drop
         // DONE: event handling
-        // add to runtime
+        // DONE: add to runtime
         // get working on body drag-and-drop
-    // make a save-html button  (body.innerHTML save to file)
+    // persist page reload
+        // generate cells and runtime from a yaml
+        // debounce save-to-local-storage
     // save and load to yaml file (code and HTML output)
     // detect top level destructured variable names
     // add filesystem
@@ -299,6 +302,24 @@ let runtime = makeRuntime()
         }
         return element
     }
+    // HTML download problems
+        // imports are not loaded (main.js)
+        // styles from classes
+    const HtmlDownloadButton = ()=>html`<Button
+        style="position:fixed;top:1rem;right:1rem;z-index:10;border-radius:1em;box-shadow:0 4px 5px 0 rgba(0,0,0,0.14), 0 1px 10px 0 rgba(0,0,0,0.12), 0 2px 4px -1px rgba(0,0,0,0.3); cursor:pointer;" 
+        onclick=${()=>{
+            const html = document.body.parentElement.outerHTML
+            const blob = new Blob([html], {type: "text/html;charset=utf-8"})
+            const url = URL.createObjectURL(blob)
+            const a = document.createElement("a")
+            a.href = url
+            a.download = "index.html"
+            a.click()
+            setTimeout(()=>URL.revokeObjectURL(url), 1000)
+        }}
+        >
+            Save HTML
+    </Button>`
 
 // 
 // setup
@@ -316,6 +337,7 @@ let runtime = makeRuntime()
     let lineHeight = `1.5em`
     document.body = html`
         <body font-size=15px background-color=#272c35 color=whitesmoke overflow=scroll width=100vw padding=0 margin=0>
+            ${HtmlDownloadButton()}
             <Cell type="jsCode" coreContent="console.log('howdy')\n\n\n\n" />
         </body>
     `
