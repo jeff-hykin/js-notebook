@@ -48,6 +48,7 @@ import { makeRuntime, runCode } from "./tools/js_runtime.js"
         // generate cells and runtime from a yaml
         // debounce save-to-local-storage
         // save html output in the yaml
+        // fix the file blobs reloading into variables
     // run code experince
         // DONE: show output
         // DONE: show runtime/syntax errors
@@ -67,6 +68,12 @@ import { makeRuntime, runCode } from "./tools/js_runtime.js"
 let runtime = makeRuntime()
 window.yamlData = storageObject.yamlData || {
     settings: {
+        theme: {
+            name: "default-dark",
+            background: "#546E7A",
+            foreground2: "whitesmoke",
+            background2: "#272c35",
+        },
     },
     cells: [
         {
@@ -130,14 +137,14 @@ const saveYamlChanges = ()=>{
             }
             saveYamlChanges()
         }
-        const element = html`<Column name="Cell" border-top="2px solid #546E7A" width="100%" position="relative"></Column>`
+        const element = html`<Column name="Cell" border-top="2px solid var(--theme-background)" width="100%" position="relative"></Column>`
         element.transistion = `all 0.2s ease-in-out`
         const dropStyleChanger = (isDroppping)=>{
             if (isDroppping) {
-                element.style.border = "2px dashed #546E7A"
+                element.style.border = "2px dashed var(--theme-background)"
             } else {
                 element.style.border = "none"
-                element.style.borderTop="2px solid #546E7A"
+                element.style.borderTop="2px solid var(--theme-background)"
             }
         }
         element.addEventListener('dragover', (event) => {
@@ -147,13 +154,12 @@ const saveYamlChanges = ()=>{
         element.addEventListener('dragleave', () => {
             dropStyleChanger(false)
         })
-        element.addEventListener('drop', (event) => {
+        element.addEventListener('drop', async (event) => {
             event.preventDefault()
             dropStyleChanger(false)
             const fileObjects = event.dataTransfer.files
             if (fileObjects.length == 1) {
                 const fileObject = fileObjects[0]
-                console.debug(`fileObject is:`,fileObject)
                 const [ folders, itemName, itemExtensionWithDot ] = pathPieces(fileObject.name)
                 let varName = toCamelCase(itemName)
                 let promptMessage = `What variable should I assign to this file?`
@@ -179,8 +185,9 @@ const saveYamlChanges = ()=>{
                     element.insertAdjacentElement("beforebegin", Cell(newCellData))
                     saveYamlChanges()
                 }
-                console.debug(`fileObject is:`,fileObject)
-                if (fileObject.type.startsWith("text/")) {
+                if (fileObject.type == "text/csv") {
+                    
+                } else if (fileObject.type.startsWith("text/")) {
                     fileObject.text().then(afterLoaded)
                 } else {
                     fileObject.arrayBuffer().then(data=>new Uint8Array(data)).then(afterLoaded)
@@ -202,7 +209,7 @@ const saveYamlChanges = ()=>{
                 font-family="monospace"
                 white-space="pre"
                 fontSize=0.8em
-                background="#546E7A"
+                background="var(--theme-background)"
                 width="100%"
                 padding="0.5rem"
                 overflow="auto"
@@ -312,7 +319,7 @@ const saveYamlChanges = ()=>{
             const outputArea = html`<Column
                 font-family="monospace"
                 fontSize=0.8em
-                background="#546E7A"
+                background="var(--theme-background)"
                 width="100%"
                 padding="0.5rem"
                 overflow="auto"
@@ -324,7 +331,7 @@ const saveYamlChanges = ()=>{
             element.append(
                 html`
                 <Column width="100%" height="100%">
-                    <h4 padding=1em width=100% border-bottom="2px solid #546E7A">${filePath} <code color=cornflowerblue>(${varName})</code></h4>
+                    <h4 padding=1em width=100% border-bottom="2px solid var(--theme-background)">${filePath} <code color=cornflowerblue>(${varName})</code></h4>
                     ${outputArea}
                 </Column>`
             )
@@ -536,9 +543,20 @@ const saveYamlChanges = ()=>{
         Editor,
         Cell,
     })
+    const themeStyleElement = document.createElement("style")
+    document.head.append(themeStyleElement)
     const cellContainer = html`<Column name="CellContainer" width="100%" position="relative"></Column>`
     const loadFromYaml = async (yamlData)=>{
         removeAllChildElements(cellContainer)
+        let styleChunks = []
+        for (const [key, value] of Object.entries(yamlData?.settings?.theme || {})) {
+            styleChunks.push(`--theme-${key}: ${value};`)
+        }
+        themeStyleElement.innerHTML = `
+            :root {
+                ${styleChunks.join("\n")}
+            }
+        `
         document.body.append(...yamlData.cells.map(cell=>Cell(cell)))
     }
 
@@ -547,7 +565,7 @@ const saveYamlChanges = ()=>{
 // 
     let lineHeight = `1.5em`
     document.body = html`
-        <body font-size=15px background-color=#272c35 color=whitesmoke overflow=scroll width=100vw padding=0 margin=0>
+        <body font-size=15px background-color=var(--theme-background2) color=var(--theme-foreground2) overflow=scroll width=100vw padding=0 margin=0>
             ${YamlDownloadButton()}
         </body>
     `
