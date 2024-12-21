@@ -9,13 +9,13 @@ import { zip, enumerate, count, permute, combinations, wrapAroundGet } from "htt
 import { toCamelCase } from "https://esm.sh/gh/jeff-hykin/good-js@1.13.5.1/source/flattened/to_camel_case.js"
 import { toKebabCase } from "https://esm.sh/gh/jeff-hykin/good-js@1.13.5.1/source/flattened/to_kebab_case.js"
 import { pathPieces } from "https://esm.sh/gh/jeff-hykin/good-js@1.13.5.1/source/flattened/path_pieces.js"
-import { isValidIdentifier } from "https://esm.sh/gh/jeff-hykin/good-js@1.13.5.1/source/flattened/is_valid_identifier.js"
 // import { deepCopy, deepCopySymbol, allKeyDescriptions, deepSortObject, shallowSortObject, isGeneratorObject,isAsyncIterable, isSyncIterable, isIterableTechnically, isSyncIterableObjectOrContainer, allKeys } from "https://deno.land/x/good@1.13.2.0/value.js"
 import { deepCopy, deepCopySymbol, allKeyDescriptions, deepSortObject, shallowSortObject, isGeneratorObject,isAsyncIterable, isSyncIterable, isIterableTechnically, isSyncIterableObjectOrContainer, allKeys } from "https://esm.sh/gh/jeff-hykin/good-js@1.13.2.0/source/value.js"
 import { dump, load } from "https://esm.sh/js-yaml@4.1.0/"
 const yaml = { stringify: dump, parse: load }
 
 import { TextEditor } from "./components/text_editor.js"
+import * as stateManager from './systems/state_manager.js'
 import * as danfo from './tools/danfo.js'
 // import * as danfo from 'https://esm.sh/danfojs@1.1.2/dist/danfojs-browser/src/index.js?dev'
     // as part of danfojs, we could reuse these to minimize import size:
@@ -114,34 +114,34 @@ const defaultTheme = {
     "markdownRosePink": "#c1798b",
     "markdownCoralRed": "#ef6767",
 }
-window.yamlData = storageObject.yamlData || {
-    settings: {
-        theme: {...defaultTheme},
-    },
-    cells: [
-        {
-            cellId: Math.random(),
-            type: "file",
-            filePath: "test.js",
-            coreContent: "howdy howdy",
-            varName: "test",
-        },
-        {
-            cellId: Math.random(),
-            type: "jsCode",
-            coreContent: "console.log('howdy')\n\n\n\n",
-        },
-        {
-            cellId: Math.random(),
-            type: "markdown",
-            coreContent: "console.log('howdy')\n\n\n\n",
-        },
-    ]
-}
-// TODO: debounce
-const saveYamlChanges = ()=>{
-    storageObject.yamlData = yamlData
-}
+let activeTheme = {}
+// debugging:
+window.activeState = stateManager.activeState
+// {
+//     settings: {
+//         theme: {...defaultTheme},
+//     },
+//     cells: [
+//         {
+//             cellId: Math.random(),
+//             type: "file",
+//             filePath: "test.js",
+//             coreContent: "howdy howdy",
+//             varName: "test",
+//         },
+//         {
+//             cellId: Math.random(),
+//             type: "jsCode",
+//             coreContent: "console.log('howdy')\n\n\n\n",
+//         },
+//         {
+//             cellId: Math.random(),
+//             type: "markdown",
+//             coreContent: "console.log('howdy')\n\n\n\n",
+//         },
+//     ]
+// }
+
 
 
 // 
@@ -161,25 +161,7 @@ const saveYamlChanges = ()=>{
         return element
     }
     function Cell({cellId, type, coreContent, fileInfos, style, }={}) {
-        const getCellData = ()=>{
-            for (const each of yamlData.cells) {
-                if (each.cellId == cellId) {
-                    return each
-                }
-            }
-            return {}
-        }
-        const removeCellData = ()=>{
-            let index = -1
-            for (const each of yamlData.cells) {
-                index++
-                if (each.cellId == cellId) {
-                    yamlData.cells.splice(index, 1)
-                    break
-                }
-            }
-            saveYamlChanges()
-        }
+        
         const element = html`<Column name="Cell" border-top="2px solid var(--theme-background)" width="100%" position="relative"></Column>`
         element.transistion = `all 0.2s ease-in-out`
         
@@ -193,8 +175,8 @@ const saveYamlChanges = ()=>{
                     width: "100%",
                     onRun: () => onRun(),
                     onChange: () => {
-                        getCellData().coreContent = editor.code
-                        saveYamlChanges()
+                        stateManager.getCellFromId(cellId).coreContent = editor.code
+                        stateManager.activeStateWasUpdated()
                     },
                 })
                 const outputArea = html`<Column
@@ -220,7 +202,7 @@ const saveYamlChanges = ()=>{
                         let errorString = (error?.stack||error.message)
                         // FIXME: this is a bit too agressive of pattern matching. Use window.location.href 
                         errorString = errorString.replace(/@https?:(localhost)?.+ > eval:/g, `line `)
-                        errorString = errorString.replace(/(runCode|onRun|run|TextEditor|Cell|loadFromYaml|loadFromYaml\/<)@http:\/\/.+\n?/g, ``)
+                        errorString = errorString.replace(/(runCode|onRun|run|TextEditor|Cell|loadDataAndUiFromYaml|loadDataAndUiFromYaml\/<)@http:\/\/.+\n?/g, ``)
                         errorString = errorString.replace(/(f|im|keydown|Md\/<|runHandlers|handleEvent|EventListener\.handleEvent\*ensureHandlers|O)@https:\/\/esm\.sh\/.+codemirror_esm@.+\n?/g, ``)
                             // onRun@http://localhost:5173/main.js:187:61
                             // onRun@http://localhost:5173/main.js:169:30
@@ -230,8 +212,8 @@ const saveYamlChanges = ()=>{
                             // keydown@https://esm.sh/v135/gh/jeff-hykin/codemirror_esm@0.0.2.0/es2022/main.js:19:18821
                             // TextEditor@http://localhost:5173/main.js:312:22
                             // Cell@http://localhost:5173/main.js:166:28
-                            // loadFromYaml/<@http://localhost:5173/main.js:425:62
-                            // loadFromYaml@http://localhost:5173/main.js:425:48
+                            // loadDataAndUiFromYaml/<@http://localhost:5173/main.js:425:62
+                            // loadDataAndUiFromYaml@http://localhost:5173/main.js:425:48
                             // @http://localhost:5173/main.js:437:17
                         return errorString.split(/\n/g,).map(line=>html`<p>${line}</p>`)
                     }
@@ -265,16 +247,8 @@ const saveYamlChanges = ()=>{
                                     type: "jsCode",
                                     coreContent: "\n\n\n\n",
                                 }
-                                let index = -1
-                                for (const each of yamlData.cells) {
-                                    index++
-                                    if (each.cellId == cellId) {
-                                        yamlData.cells.splice(index+1, 0, newCellData)
-                                        break
-                                    }
-                                }
+                                stateManager.injectCellAfter({existingCell: {cellId}, cellToInject: newCellData})
                                 element.insertAdjacentElement("afterend", Cell(newCellData))
-                                saveYamlChanges()
                             }}>
                                 add JS cell
                         </BasicButton>
@@ -285,22 +259,14 @@ const saveYamlChanges = ()=>{
                                     type: "markdown",
                                     coreContent: "",
                                 }
-                                let index = -1
-                                for (const each of yamlData.cells) {
-                                    index++
-                                    if (each.cellId == cellId) {
-                                        yamlData.cells.splice(index+1, 0, newCellData)
-                                        break
-                                    }
-                                }
+                                stateManager.injectCellAfter({existingCell: {cellId}, cellToInject: newCellData})
                                 element.insertAdjacentElement("afterend", Cell(newCellData))
-                                saveYamlChanges()
                             }}>
                                 add markdown cell
                         </BasicButton>
                         <BasicButton background-color=var(--theme-green) onClick=${onRun}>run</BasicButton>
                         <BasicButton background-color=var(--theme-red) onClick=${()=>{
-                            removeCellData()
+                            stateManager.removeCellData({cellId})
                             element.remove()
                             }}>delete (above)</BasicButton>
                     </Row>`
@@ -331,8 +297,8 @@ const saveYamlChanges = ()=>{
                     width: "100%",
                     onRun: () => onRun(),
                     onChange: () => {
-                        getCellData().coreContent = editor.code
-                        saveYamlChanges()
+                        stateManager.getCellFromId(cellId).coreContent = editor.code
+                        stateManager.activeStateWasUpdated()
                     },
                 })
                 const outputArea = html`<Column
@@ -358,7 +324,7 @@ const saveYamlChanges = ()=>{
                         let errorString = (error?.stack||error.message)
                         // FIXME: this is a bit too agressive of pattern matching. Use window.location.href 
                         errorString = errorString.replace(/@https?:(localhost)?.+ > eval:/g, `line `)
-                        errorString = errorString.replace(/(runCode|onRun|run|TextEditor|Cell|loadFromYaml|loadFromYaml\/<)@http:\/\/.+\n?/g, ``)
+                        errorString = errorString.replace(/(runCode|onRun|run|TextEditor|Cell|loadDataAndUiFromYaml|loadDataAndUiFromYaml\/<)@http:\/\/.+\n?/g, ``)
                         errorString = errorString.replace(/(f|im|keydown|Md\/<|runHandlers|handleEvent|EventListener\.handleEvent\*ensureHandlers|O)@https:\/\/esm\.sh\/.+codemirror_esm@.+\n?/g, ``)
                             // onRun@http://localhost:5173/main.js:187:61
                             // onRun@http://localhost:5173/main.js:169:30
@@ -368,8 +334,8 @@ const saveYamlChanges = ()=>{
                             // keydown@https://esm.sh/v135/gh/jeff-hykin/codemirror_esm@0.0.2.0/es2022/main.js:19:18821
                             // TextEditor@http://localhost:5173/main.js:312:22
                             // Cell@http://localhost:5173/main.js:166:28
-                            // loadFromYaml/<@http://localhost:5173/main.js:425:62
-                            // loadFromYaml@http://localhost:5173/main.js:425:48
+                            // loadDataAndUiFromYaml/<@http://localhost:5173/main.js:425:62
+                            // loadDataAndUiFromYaml@http://localhost:5173/main.js:425:48
                             // @http://localhost:5173/main.js:437:17
                         return errorString.split(/\n/g,).map(line=>html`<p>${line}</p>`)
                     }
@@ -403,16 +369,8 @@ const saveYamlChanges = ()=>{
                                     type: "jsCode",
                                     coreContent: "\n\n\n\n",
                                 }
-                                let index = -1
-                                for (const each of yamlData.cells) {
-                                    index++
-                                    if (each.cellId == cellId) {
-                                        yamlData.cells.splice(index+1, 0, newCellData)
-                                        break
-                                    }
-                                }
+                                stateManager.injectCellAfter({existingCell: {cellId}, cellToInject: newCellData})
                                 element.insertAdjacentElement("afterend", Cell(newCellData))
-                                saveYamlChanges()
                             }}>
                                 add JS cell
                         </BasicButton>
@@ -423,16 +381,8 @@ const saveYamlChanges = ()=>{
                                     type: "markdown",
                                     coreContent: "",
                                 }
-                                let index = -1
-                                for (const each of yamlData.cells) {
-                                    index++
-                                    if (each.cellId == cellId) {
-                                        yamlData.cells.splice(index+1, 0, newCellData)
-                                        break
-                                    }
-                                }
+                                stateManager.injectCellAfter({existingCell: {cellId}, cellToInject: newCellData})
                                 element.insertAdjacentElement("afterend", Cell(newCellData))
-                                saveYamlChanges()
                             }}>
                                 add markdown cell
                         </BasicButton>
@@ -463,16 +413,8 @@ const saveYamlChanges = ()=>{
                                     type: "jsCode",
                                     coreContent: "\n\n\n\n",
                                 }
-                                let index = -1
-                                for (const each of yamlData.cells) {
-                                    index++
-                                    if (each.cellId == cellId) {
-                                        yamlData.cells.splice(index+1, 0, newCellData)
-                                        break
-                                    }
-                                }
+                                stateManager.injectCellAfter({existingCell: {cellId}, cellToInject: newCellData})
                                 element.insertAdjacentElement("afterend", Cell(newCellData))
-                                saveYamlChanges()
                             }}>
                                 add JS cell
                         </BasicButton>
@@ -483,16 +425,8 @@ const saveYamlChanges = ()=>{
                                     type: "markdown",
                                     coreContent: "",
                                 }
-                                let index = -1
-                                for (const each of yamlData.cells) {
-                                    index++
-                                    if (each.cellId == cellId) {
-                                        yamlData.cells.splice(index+1, 0, newCellData)
-                                        break
-                                    }
-                                }
+                                stateManager.injectCellAfter({existingCell: {cellId}, cellToInject: newCellData})
                                 element.insertAdjacentElement("afterend", Cell(newCellData))
-                                saveYamlChanges()
                             }}>
                                 add markdown cell
                         </BasicButton>
@@ -545,16 +479,8 @@ const saveYamlChanges = ()=>{
                         data: await dataPromise,
                     }
                 }
-                let index = -1
-                for (const each of yamlData.cells) {
-                    index++
-                    if (each.cellId == cellId) {
-                        yamlData.cells.splice(index, 0, newCellData)
-                        break
-                    }
-                }
+                injectCellBefore({existingCell: {cellId}, cellToInject: newCellData})
                 element.insertAdjacentElement("beforebegin", Cell(newCellData))
-                saveYamlChanges()
             })
         
         mergeStyles(element, style)
@@ -581,7 +507,7 @@ const saveYamlChanges = ()=>{
     const YamlDownloadButton = ()=>html`<Button
         style="position:fixed;top:1rem;right:1rem;z-index:10;border-radius:1em;box-shadow:0 4px 5px 0 rgba(0,0,0,0.14), 0 1px 10px 0 rgba(0,0,0,0.12), 0 2px 4px -1px rgba(0,0,0,0.3); cursor:pointer;" 
         onclick=${()=>{
-            const data = yaml.stringify(yamlData)
+            const data = yaml.stringify(stateManager.activeState)
             const blob = new Blob([data], {type: "text/yaml;charset=utf-8"})
             const url = URL.createObjectURL(blob)
             const a = document.createElement("a")
@@ -606,10 +532,10 @@ const saveYamlChanges = ()=>{
     const themeStyleElement = document.createElement("style")
     document.head.append(themeStyleElement)
     const cellContainer = html`<Column name="CellContainer" width="100%" position="relative"></Column>`
-    const loadFromYaml = async (yamlData)=>{
+    const loadDataAndUiFromYaml = async (yamlString)=>{
         removeAllChildElements(cellContainer)
         let styleChunks = []
-        for (const [key, value] of Object.entries({...defaultTheme, ...yamlData?.settings?.theme, })) {
+        for (const [key, value] of Object.entries({...defaultTheme, ...activeTheme, })) {
             styleChunks.push(`--theme-${toKebabCase(key)}: ${value};`)
         }
         themeStyleElement.innerHTML = `
@@ -617,7 +543,8 @@ const saveYamlChanges = ()=>{
                 ${styleChunks.join("\n")}
             }
         `
-        document.body.append(...yamlData.cells.map(cell=>Cell(cell)))
+        await stateManager.loadDataFromYaml(yamlString)
+        document.body.append(...stateManager.activeState.cells.map(cell=>Cell(cell)))
     }
 
 // 
@@ -629,4 +556,4 @@ const saveYamlChanges = ()=>{
             ${YamlDownloadButton()}
         </body>
     `
-    loadFromYaml(yamlData)
+    loadDataAndUiFromYaml(storageObject.activeState)
