@@ -70,11 +70,13 @@ let runtime = makeRuntime()
 const defaultTheme = {
     name: "default-dark",
     background: "#546E7A",
+    foreground: "white",
     secondaryForeground: "whitesmoke",
     secondaryBackground: "#272c35",
     green: "turquoise",
     red: "salmon",
     blue: "cornflowerblue",
+    yellow: "#E5C07B",
     
     "markdownDarkCharcoal": "#121212",
     "markdownCharcoalGray": "#232428",
