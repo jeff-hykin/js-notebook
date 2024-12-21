@@ -6,6 +6,7 @@ import { showToast } from "https://esm.sh/gh/jeff-hykin/good-component@0.3.0/mai
 import { addDynamicStyleFlags, setupStyles, createCssClass, setupClassStyles, hoverStyleHelper, combineClasses, mergeStyles, AfterSilent, removeAllChildElements } from "https://esm.sh/gh/jeff-hykin/good-component@0.3.0/main/helpers.js"
 import { zip, enumerate, count, permute, combinations, wrapAroundGet } from "https://esm.sh/gh/jeff-hykin/good-js@1.13.5.1/source/array.js"
 import { toCamelCase } from "https://esm.sh/gh/jeff-hykin/good-js@1.13.5.1/source/flattened/to_camel_case.js"
+import { toKebabCase } from "https://esm.sh/gh/jeff-hykin/good-js@1.13.5.1/source/flattened/to_kebab_case.js"
 import { pathPieces } from "https://esm.sh/gh/jeff-hykin/good-js@1.13.5.1/source/flattened/path_pieces.js"
 import { isValidIdentifier } from "https://esm.sh/gh/jeff-hykin/good-js@1.13.5.1/source/flattened/is_valid_identifier.js"
 // import { deepCopy, deepCopySymbol, allKeyDescriptions, deepSortObject, shallowSortObject, isGeneratorObject,isAsyncIterable, isSyncIterable, isIterableTechnically, isSyncIterableObjectOrContainer, allKeys } from "https://deno.land/x/good@1.13.2.0/value.js"
@@ -66,14 +67,53 @@ import { makeRuntime, runCode } from "./tools/js_runtime.js"
     // theme system
 
 let runtime = makeRuntime()
+const defaultTheme = {
+    name: "default-dark",
+    background: "#546E7A",
+    secondaryForeground: "whitesmoke",
+    secondaryBackground: "#272c35",
+    green: "turquoise",
+    red: "salmon",
+    blue: "cornflowerblue",
+    
+    "markdownDarkCharcoal": "#121212",
+    "markdownCharcoalGray": "#232428",
+    "markdownSlateGray": "#292e37",
+    "markdownTealSlate": "#2b4455",
+    "markdownDarkSlate": "#2d2f34",
+    "markdownCharcoalDark": "#303135",
+    "markdownStormGray": "#303238",
+    "markdownDeepMaroon": "#35262a",
+    "markdownGraphiteGray": "#36383f",
+    "markdownMutedWine": "#392d31",
+    "markdownDarkSilver": "#393b42",
+    "markdownDeepStone": "#3a3c42",
+    "markdownBlueGray": "#3c424d",
+    "markdownAshGray": "#494c56",
+    "markdownSteelGray": "#535662",
+    "markdownShadowGray": "#55575f",
+    "markdownMistGray": "#595c68",
+    "markdownDustyBlue": "#757a86",
+    "markdownFogGray": "#777980",
+    "markdownCoolGray": "#8f939f",
+    "markdownSilverGray": "#969aa5",
+    "markdownLightGray": "#9a9da3",
+    "markdownLightSilver": "#aaa",
+    "markdownSoftSilver": "#b3b5bc",
+    "markdownLightIvory": "#eee",
+    "markdownPureWhite": "#fff",
+    "markdownDeepBlue": "#1f70de",
+    "markdownOceanBlue": "#327491",
+    "markdownSkyBlue": "#32baff",
+    "markdownSoftBlue": "#4b96e6",
+    "markdownLightTeal": "#65acca",
+    "markdownPaleBlue": "#67ccff",
+    "markdownRosePink": "#c1798b",
+    "markdownCoralRed": "#ef6767",
+}
 window.yamlData = storageObject.yamlData || {
     settings: {
-        theme: {
-            name: "default-dark",
-            background: "#546E7A",
-            foreground2: "whitesmoke",
-            background2: "#272c35",
-        },
+        theme: {...defaultTheme},
     },
     cells: [
         {
@@ -245,7 +285,7 @@ const saveYamlChanges = ()=>{
                 }
                 if (runtimeError) {
                     outputArea.append(
-                        html`<Column style="color:salmon;">
+                        html`<Column style="color:var(--theme-red);">
                             runtimeError: ${runtimeError?.message}<br><br>
                             <div padding-left=1em>
                                 ${formatError(runtimeError)}
@@ -254,7 +294,7 @@ const saveYamlChanges = ()=>{
                     )
                 } else if (syntaxError) {
                     outputArea.append(
-                        html`<Column style="color:salmon;">
+                        html`<Column style="color:var(--theme-red);">
                             syntaxError: ${syntaxError?.message}<br><br>
                             <div padding-left=1em>
                                 ${formatError(syntaxError)}
@@ -306,8 +346,8 @@ const saveYamlChanges = ()=>{
                         }}>
                             add markdown cell
                     </BasicButton>
-                    <BasicButton background-color=turquoise onClick=${onRun}>run</BasicButton>
-                    <BasicButton background-color=salmon onClick=${()=>{
+                    <BasicButton background-color=var(--theme-green) onClick=${onRun}>run</BasicButton>
+                    <BasicButton background-color=var(--theme-red) onClick=${()=>{
                         removeCellData()
                         element.remove()
                         }}>delete (above)</BasicButton>
@@ -331,7 +371,7 @@ const saveYamlChanges = ()=>{
             element.append(
                 html`
                 <Column width="100%" height="100%">
-                    <h4 padding=1em width=100% border-bottom="2px solid var(--theme-background)">${filePath} <code color=cornflowerblue>(${varName})</code></h4>
+                    <h4 padding=1em width=100% border-bottom="2px solid var(--theme-background)">${filePath} <code color=var(--theme-blue)>(${varName})</code></h4>
                     ${outputArea}
                 </Column>`
             )
@@ -357,7 +397,7 @@ const saveYamlChanges = ()=>{
                         }}>
                             add JS cell
                     </BasicButton>
-                    <BasicButton background-color=salmon onClick=${()=>{
+                    <BasicButton background-color=var(--theme-red) onClick=${()=>{
                         removeCellData()
                         element.remove()
                         }}>delete (above)</BasicButton>
@@ -416,8 +456,8 @@ const saveYamlChanges = ()=>{
                         }}>
                             add markdown cell
                     </BasicButton>
-                    <BasicButton background-color=turquoise onClick=${onRun}>run</BasicButton>
-                    <BasicButton background-color=salmon onClick=${()=>{
+                    <BasicButton background-color=var(--theme-green) onClick=${onRun}>run</BasicButton>
+                    <BasicButton background-color=var(--theme-red) onClick=${()=>{
                         removeCellData()
                         element.remove()
                         }}>delete (above)</BasicButton>
@@ -492,7 +532,7 @@ const saveYamlChanges = ()=>{
         passAlongProps(element, props)
         element.editor = editor
         Object.defineProperties(element, {
-            code: { get() { return editor.state.doc.text.join("\n") } },
+            code: { get() { return (editor?.state?.doc?.text||[])?.join("\n") || "" } },
         })
         window.editor = editor // FIXME: remove, debugging only
         if (props.width) {
@@ -549,8 +589,8 @@ const saveYamlChanges = ()=>{
     const loadFromYaml = async (yamlData)=>{
         removeAllChildElements(cellContainer)
         let styleChunks = []
-        for (const [key, value] of Object.entries(yamlData?.settings?.theme || {})) {
-            styleChunks.push(`--theme-${key}: ${value};`)
+        for (const [key, value] of Object.entries({...defaultTheme, ...yamlData?.settings?.theme, })) {
+            styleChunks.push(`--theme-${toKebabCase(key)}: ${value};`)
         }
         themeStyleElement.innerHTML = `
             :root {
@@ -565,7 +605,7 @@ const saveYamlChanges = ()=>{
 // 
     let lineHeight = `1.5em`
     document.body = html`
-        <body font-size=15px background-color=var(--theme-background2) color=var(--theme-foreground2) overflow=scroll width=100vw padding=0 margin=0>
+        <body font-size=15px background-color=var(--theme-secondary-background) color=var(--theme-secondary-foreground) overflow=scroll width=100vw padding=0 margin=0>
             ${YamlDownloadButton()}
         </body>
     `
