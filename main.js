@@ -34,12 +34,19 @@ import { Editor as MarkdownEditor,} from 'https://esm.sh/@toast-ui/editor@3.2.2'
 // import 'https://esm.sh/@toast-ui/editor/dist/toastui-editor.css'
 
 import { makeRuntime, runCode } from "./tools/js_runtime.js"
+import CM from 'https://esm.sh/gh/jeff-hykin/codemirror_esm@0.0.2.2/main.js'
+const { javascript } = CM["@codemirror/lang-javascript"]
 
 // TODO:
     // DONE: get console.log to show up in $out
     // DONE: make a save-yaml button  (body.innerHTML save to file)
     // DONE: markdown editor
         // make shift+enter to go to the next editable cell (e.g. markdown or code)
+    // refactor some stuff
+        // DONE: cleanup state management
+        // clean up cell management
+        // fixup theming
+        // ctrl+enter focuses on the next cell (for markdown and code)
     // file drag-and-drop
         // DONE: event handling
         // DONE: add to runtime
@@ -47,8 +54,8 @@ import { makeRuntime, runCode } from "./tools/js_runtime.js"
         // only preview part of the file string to save on memory
     // persist page reload
         // DONE: edited data stays in sync with yamlData
+        // DONE: debounce save-to-local-storage
         // generate cells and runtime from a yaml
-        // debounce save-to-local-storage
         // save html output in the yaml
         // fix the file blobs reloading into variables
     // run code experince
@@ -160,118 +167,134 @@ window.activeState = stateManager.activeState
         passAlongProps(element, props)
         return element
     }
+    function OutputArea() {
+        return html`<Column
+            font-family="monospace"
+            white-space="pre"
+            fontSize=0.8em
+            background="var(--theme-background)"
+            width="100%"
+            padding="0.5rem"
+            overflow="auto"
+            max-height="20em"
+            />
+        `
+    }
     function Cell({cellId, type, coreContent, fileInfos, style, }={}) {
-        
         const element = html`<Column name="Cell" border-top="2px solid var(--theme-background)" width="100%" position="relative"></Column>`
         element.transistion = `all 0.2s ease-in-out`
+
+        // 
+        // helpers
+        // 
+            let onRun = () => {}
+            const makeOnRunJs = async (editor, outputArea) => async () => {
+                removeAllChildElements(outputArea)
+                const { runtimeError, syntaxError } = await runCode({
+                    code: editor.code,
+                    runtime,
+                    outputElement: outputArea,
+                })
+                const formatError = (error)=>{
+                    let errorString = (error?.stack||error.message)
+                    // FIXME: this is a bit too agressive of pattern matching. Use window.location.href 
+                    errorString = errorString.replace(/@https?:(localhost)?.+ > eval:/g, `line `)
+                    errorString = errorString.replace(/(runCode|onRun|run|TextEditor|Cell|loadDataAndUiFromYaml|loadDataAndUiFromYaml\/<)@http:\/\/.+\n?/g, ``)
+                    errorString = errorString.replace(/(f|im|keydown|Md\/<|runHandlers|handleEvent|EventListener\.handleEvent\*ensureHandlers|O)@https:\/\/esm\.sh\/.+codemirror_esm@.+\n?/g, ``)
+                        // onRun@http://localhost:5173/main.js:187:61
+                        // onRun@http://localhost:5173/main.js:169:30
+                        // run@http://localhost:5173/main.js:339:36
+                        // f@https://esm.sh/v135/gh/jeff-hykin/codemirror_esm@0.0.2.0/es2022/main.js:19:20617
+                        // im@https://esm.sh/v135/gh/jeff-hykin/codemirror_esm@0.0.2.0/es2022/main.js:19:20742
+                        // keydown@https://esm.sh/v135/gh/jeff-hykin/codemirror_esm@0.0.2.0/es2022/main.js:19:18821
+                        // TextEditor@http://localhost:5173/main.js:312:22
+                        // Cell@http://localhost:5173/main.js:166:28
+                        // loadDataAndUiFromYaml/<@http://localhost:5173/main.js:425:62
+                        // loadDataAndUiFromYaml@http://localhost:5173/main.js:425:48
+                        // @http://localhost:5173/main.js:437:17
+                    return errorString.split(/\n/g,).map(line=>html`<p>${line}</p>`)
+                }
+                if (runtimeError) {
+                    outputArea.append(
+                        html`<Column style="color:var(--theme-red);">
+                            runtimeError: ${runtimeError?.message}<br><br>
+                            <div padding-left=1em>
+                                ${formatError(runtimeError)}
+                            </div>
+                        </Column>`
+                    )
+                } else if (syntaxError) {
+                    outputArea.append(
+                        html`<Column style="color:var(--theme-red);">
+                            syntaxError: ${syntaxError?.message}<br><br>
+                            <div padding-left=1em>
+                                ${formatError(syntaxError)}
+                            </div>
+                        </Column>`
+                    )
+                }
+            }
+            const newJsCellButtton = html`<BasicButton
+                onclick=${(event)=>{
+                    const newCellData = {
+                        cellId: Math.random(),
+                        type: "jsCode",
+                        coreContent: "\n\n\n\n",
+                    }
+                    stateManager.injectCellAfter({existingCell: {cellId}, cellToInject: newCellData})
+                    element.insertAdjacentElement("afterend", Cell(newCellData))
+                }}>
+                    add JS cell
+            </BasicButton>`
+            const newMarkdownCellButtton = html`<BasicButton
+                onclick=${(event)=>{
+                    const newCellData = {
+                        cellId: Math.random(),
+                        type: "markdown",
+                        coreContent: "",
+                    }
+                    stateManager.injectCellAfter({existingCell: {cellId}, cellToInject: newCellData})
+                    element.insertAdjacentElement("afterend", Cell(newCellData))
+                }}>
+                    add markdown cell
+            </BasicButton>`
+            const deleteCellButton = html`<BasicButton
+                background-color=var(--theme-red)
+                onClick=${()=>{
+                    stateManager.removeCellData({cellId})
+                    element.remove()
+                }}
+                >
+                    delete (above)
+            </BasicButton>`
+            const RunButton = (onRun)=>html`<BasicButton background-color=var(--theme-green) onClick=${onRun}>run</BasicButton>`
         
         // 
         // type
         // 
-            let onRun = () => {}
             if (type == "jsCode") {
+                const outputArea = OutputArea()
                 const editor = new TextEditor({
                     initialText: coreContent,
                     width: "100%",
                     onRun: () => onRun(),
+                    language: javascript(),
                     onChange: () => {
                         stateManager.getCellFromId(cellId).coreContent = editor.code
                         stateManager.activeStateWasUpdated()
                     },
                 })
-                const outputArea = html`<Column
-                    font-family="monospace"
-                    white-space="pre"
-                    fontSize=0.8em
-                    background="var(--theme-background)"
-                    width="100%"
-                    padding="0.5rem"
-                    overflow="auto"
-                    max-height="20em"
-                    />`
-                element.editor = editor
-                element.outputArea = outputArea
-                onRun = async () => {
-                    removeAllChildElements(outputArea)
-                    const { runtimeError, syntaxError } = await runCode({
-                        code: editor.code,
-                        runtime,
-                        outputElement: outputArea,
-                    })
-                    const formatError = (error)=>{
-                        let errorString = (error?.stack||error.message)
-                        // FIXME: this is a bit too agressive of pattern matching. Use window.location.href 
-                        errorString = errorString.replace(/@https?:(localhost)?.+ > eval:/g, `line `)
-                        errorString = errorString.replace(/(runCode|onRun|run|TextEditor|Cell|loadDataAndUiFromYaml|loadDataAndUiFromYaml\/<)@http:\/\/.+\n?/g, ``)
-                        errorString = errorString.replace(/(f|im|keydown|Md\/<|runHandlers|handleEvent|EventListener\.handleEvent\*ensureHandlers|O)@https:\/\/esm\.sh\/.+codemirror_esm@.+\n?/g, ``)
-                            // onRun@http://localhost:5173/main.js:187:61
-                            // onRun@http://localhost:5173/main.js:169:30
-                            // run@http://localhost:5173/main.js:339:36
-                            // f@https://esm.sh/v135/gh/jeff-hykin/codemirror_esm@0.0.2.0/es2022/main.js:19:20617
-                            // im@https://esm.sh/v135/gh/jeff-hykin/codemirror_esm@0.0.2.0/es2022/main.js:19:20742
-                            // keydown@https://esm.sh/v135/gh/jeff-hykin/codemirror_esm@0.0.2.0/es2022/main.js:19:18821
-                            // TextEditor@http://localhost:5173/main.js:312:22
-                            // Cell@http://localhost:5173/main.js:166:28
-                            // loadDataAndUiFromYaml/<@http://localhost:5173/main.js:425:62
-                            // loadDataAndUiFromYaml@http://localhost:5173/main.js:425:48
-                            // @http://localhost:5173/main.js:437:17
-                        return errorString.split(/\n/g,).map(line=>html`<p>${line}</p>`)
-                    }
-                    if (runtimeError) {
-                        outputArea.append(
-                            html`<Column style="color:var(--theme-red);">
-                                runtimeError: ${runtimeError?.message}<br><br>
-                                <div padding-left=1em>
-                                    ${formatError(runtimeError)}
-                                </div>
-                            </Column>`
-                        )
-                    } else if (syntaxError) {
-                        outputArea.append(
-                            html`<Column style="color:var(--theme-red);">
-                                syntaxError: ${syntaxError?.message}<br><br>
-                                <div padding-left=1em>
-                                    ${formatError(syntaxError)}
-                                </div>
-                            </Column>`
-                        )
-                    }
-                }
                 element.append(editor, outputArea)
                 element.append(
                     html`<Row gap=0.5em padding=1em justify-content=center width="100%">
-                        <BasicButton
-                            onclick=${(event)=>{
-                                const newCellData = {
-                                    cellId: Math.random(),
-                                    type: "jsCode",
-                                    coreContent: "\n\n\n\n",
-                                }
-                                stateManager.injectCellAfter({existingCell: {cellId}, cellToInject: newCellData})
-                                element.insertAdjacentElement("afterend", Cell(newCellData))
-                            }}>
-                                add JS cell
-                        </BasicButton>
-                        <BasicButton
-                            onclick=${(event)=>{
-                                const newCellData = {
-                                    cellId: Math.random(),
-                                    type: "markdown",
-                                    coreContent: "",
-                                }
-                                stateManager.injectCellAfter({existingCell: {cellId}, cellToInject: newCellData})
-                                element.insertAdjacentElement("afterend", Cell(newCellData))
-                            }}>
-                                add markdown cell
-                        </BasicButton>
-                        <BasicButton background-color=var(--theme-green) onClick=${onRun}>run</BasicButton>
-                        <BasicButton background-color=var(--theme-red) onClick=${()=>{
-                            stateManager.removeCellData({cellId})
-                            element.remove()
-                            }}>delete (above)</BasicButton>
+                        ${newJsCellButtton}
+                        ${newMarkdownCellButtton}
+                        ${RunButton(makeOnRunJs(editor, outputArea))}
+                        ${deleteCellButton}
                     </Row>`
                 )
             } else if (type == "file") {
+                // FIXME: rework this
                 let hasDataFrameImport = false
                 const codeChunks = []
                 for (let { name, type, data } of (fileInfos||[])) {
@@ -292,105 +315,24 @@ window.activeState = stateManager.activeState
                     }
                 }
                 
+                const outputArea = OutputArea()
                 const editor = new TextEditor({
                     initialText: coreContent,
                     width: "100%",
                     onRun: () => onRun(),
+                    language: javascript(),
                     onChange: () => {
                         stateManager.getCellFromId(cellId).coreContent = editor.code
                         stateManager.activeStateWasUpdated()
                     },
                 })
-                const outputArea = html`<Column
-                    font-family="monospace"
-                    white-space="pre"
-                    fontSize=0.8em
-                    background="var(--theme-background)"
-                    width="100%"
-                    padding="0.5rem"
-                    overflow="auto"
-                    max-height="20em"
-                    />`
-                element.editor = editor
-                element.outputArea = outputArea
-                onRun = async () => {
-                    removeAllChildElements(outputArea)
-                    const { runtimeError, syntaxError } = await runCode({
-                        code: editor.code,
-                        runtime,
-                        outputElement: outputArea,
-                    })
-                    const formatError = (error)=>{
-                        let errorString = (error?.stack||error.message)
-                        // FIXME: this is a bit too agressive of pattern matching. Use window.location.href 
-                        errorString = errorString.replace(/@https?:(localhost)?.+ > eval:/g, `line `)
-                        errorString = errorString.replace(/(runCode|onRun|run|TextEditor|Cell|loadDataAndUiFromYaml|loadDataAndUiFromYaml\/<)@http:\/\/.+\n?/g, ``)
-                        errorString = errorString.replace(/(f|im|keydown|Md\/<|runHandlers|handleEvent|EventListener\.handleEvent\*ensureHandlers|O)@https:\/\/esm\.sh\/.+codemirror_esm@.+\n?/g, ``)
-                            // onRun@http://localhost:5173/main.js:187:61
-                            // onRun@http://localhost:5173/main.js:169:30
-                            // run@http://localhost:5173/main.js:339:36
-                            // f@https://esm.sh/v135/gh/jeff-hykin/codemirror_esm@0.0.2.0/es2022/main.js:19:20617
-                            // im@https://esm.sh/v135/gh/jeff-hykin/codemirror_esm@0.0.2.0/es2022/main.js:19:20742
-                            // keydown@https://esm.sh/v135/gh/jeff-hykin/codemirror_esm@0.0.2.0/es2022/main.js:19:18821
-                            // TextEditor@http://localhost:5173/main.js:312:22
-                            // Cell@http://localhost:5173/main.js:166:28
-                            // loadDataAndUiFromYaml/<@http://localhost:5173/main.js:425:62
-                            // loadDataAndUiFromYaml@http://localhost:5173/main.js:425:48
-                            // @http://localhost:5173/main.js:437:17
-                        return errorString.split(/\n/g,).map(line=>html`<p>${line}</p>`)
-                    }
-                    if (runtimeError) {
-                        outputArea.append(
-                            html`<Column style="color:var(--theme-red);">
-                                runtimeError: ${runtimeError?.message}<br><br>
-                                <div padding-left=1em>
-                                    ${formatError(runtimeError)}
-                                </div>
-                            </Column>`
-                        )
-                    } else if (syntaxError) {
-                        outputArea.append(
-                            html`<Column style="color:var(--theme-red);">
-                                syntaxError: ${syntaxError?.message}<br><br>
-                                <div padding-left=1em>
-                                    ${formatError(syntaxError)}
-                                </div>
-                            </Column>`
-                        )
-                    }
-                }
                 element.append(editor, outputArea)
                 element.append(
                     html`<Row gap=0.5em padding=1em justify-content=center width="100%">
-                        <BasicButton
-                            onclick=${(event)=>{
-                                const newCellData = {
-                                    cellId: Math.random(),
-                                    type: "jsCode",
-                                    coreContent: "\n\n\n\n",
-                                }
-                                stateManager.injectCellAfter({existingCell: {cellId}, cellToInject: newCellData})
-                                element.insertAdjacentElement("afterend", Cell(newCellData))
-                            }}>
-                                add JS cell
-                        </BasicButton>
-                        <BasicButton
-                            onclick=${(event)=>{
-                                const newCellData = {
-                                    cellId: Math.random(),
-                                    type: "markdown",
-                                    coreContent: "",
-                                }
-                                stateManager.injectCellAfter({existingCell: {cellId}, cellToInject: newCellData})
-                                element.insertAdjacentElement("afterend", Cell(newCellData))
-                            }}>
-                                add markdown cell
-                        </BasicButton>
-                        <BasicButton background-color=var(--theme-green) onClick=${onRun}>run</BasicButton>
-                        <BasicButton background-color=var(--theme-red) onClick=${()=>{
-                            removeCellData()
-                            element.remove()
-                            }}>delete (above)</BasicButton>
+                        ${newJsCellButtton}
+                        ${newMarkdownCellButtton}
+                        ${RunButton(makeOnRunJs(editor, outputArea))}
+                        ${deleteCellButton}
                     </Row>`
                 )
             } else if (type == "markdown") {
@@ -406,35 +348,9 @@ window.activeState = stateManager.activeState
                 })
                 element.append(
                     html`<Row gap=0.5em padding=1em justify-content=center width="100%">
-                        <BasicButton
-                            onclick=${(event)=>{
-                                const newCellData = {
-                                    cellId: Math.random(),
-                                    type: "jsCode",
-                                    coreContent: "\n\n\n\n",
-                                }
-                                stateManager.injectCellAfter({existingCell: {cellId}, cellToInject: newCellData})
-                                element.insertAdjacentElement("afterend", Cell(newCellData))
-                            }}>
-                                add JS cell
-                        </BasicButton>
-                        <BasicButton
-                            onclick=${(event)=>{
-                                const newCellData = {
-                                    cellId: Math.random(),
-                                    type: "markdown",
-                                    coreContent: "",
-                                }
-                                stateManager.injectCellAfter({existingCell: {cellId}, cellToInject: newCellData})
-                                element.insertAdjacentElement("afterend", Cell(newCellData))
-                            }}>
-                                add markdown cell
-                        </BasicButton>
-                        <BasicButton background-color=var(--theme-green) onClick=${onRun}>run</BasicButton>
-                        <BasicButton background-color=var(--theme-red) onClick=${()=>{
-                            removeCellData()
-                            element.remove()
-                            }}>delete (above)</BasicButton>
+                        ${newJsCellButtton}
+                        ${newMarkdownCellButtton}
+                        ${deleteCellButton}
                     </Row>`
                 )
             } else if (type == "pseudoShCode") {
@@ -528,6 +444,7 @@ window.activeState = stateManager.activeState
         BasicButton,
         TextEditor,
         Cell,
+        OutputArea,
     })
     const themeStyleElement = document.createElement("style")
     document.head.append(themeStyleElement)
