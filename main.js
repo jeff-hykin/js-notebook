@@ -17,6 +17,7 @@ const yaml = { stringify: dump, parse: load }
 import { TextEditor } from "./components/text_editor.js"
 import * as stateManager from './systems/state_manager.js'
 import * as danfo from './tools/danfo.js'
+import { focusOn } from './tools/browser_help.js'
 // import * as danfo from 'https://esm.sh/danfojs@1.1.2/dist/danfojs-browser/src/index.js?dev'
     // as part of danfojs, we could reuse these to minimize import size:
         // xlsx@0.17.2/esnext/xlsx.development.mjs
@@ -181,7 +182,7 @@ window.activeState = stateManager.activeState
         `
     }
     function Cell({cellId, type, coreContent, fileInfos, style, }={}) {
-        const element = html`<Column name="Cell" border-top="2px solid var(--theme-background)" width="100%" position="relative"></Column>`
+        const element = html`<Column id=${`cell-${cellId}`} name="Cell" border-top="2px solid var(--theme-background)" width="100%" position="relative"></Column>`
         element.transistion = `all 0.2s ease-in-out`
 
         // 
@@ -342,6 +343,17 @@ window.activeState = stateManager.activeState
                     theme: 'dark',
                     initialValue: coreContent,
                     // initialEditType: 'wysiwyg',
+                })
+                element.addEventListener('keydown', (event)=>{
+                    if (event.ctrlKey && event.key == "Enter") {
+                        for (const [each, next] of zip(element.parentNode.children, [...element.parentNode.children].slice(1))) {
+                            if (each && next && each.id == element.id) {
+                                focusOn(next)
+                                next.scrollIntoView({behavior: "smooth", block: "center", inline: "nearest"})
+                                break
+                            }
+                        }
+                    }
                 })
                 markdownEditor.on('change', (value)=>{
                     getCellData().coreContent = markdownEditor.getMarkdown()
