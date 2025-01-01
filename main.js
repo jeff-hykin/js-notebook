@@ -16,7 +16,7 @@ const yaml = { stringify: dump, parse: load }
 
 import { TextEditor } from "./components/text_editor.js"
 import * as stateManager from './systems/state_manager.js'
-import * as danfo from './tools/danfo.js'
+// import * as danfo from './tools/danfo.js'
 import { focusOn } from './tools/browser_help.js'
 // import * as danfo from 'https://esm.sh/danfojs@1.1.2/dist/danfojs-browser/src/index.js?dev'
     // as part of danfojs, we could reuse these to minimize import size:
@@ -28,7 +28,7 @@ import { focusOn } from './tools/browser_help.js'
         // tensorflow/tfjs-backend-webgl@3.21.0/esnext/dist/kernels/AddN.development.js
         // tensorflow/tfjs-core@3.21.0/esnext/dist/ops/image/non_max_suppression.development.js
         // tensorflow/tfjs-backend-webgl@3.21.0/esnext/dist/kernel_utils/reduce.development.js
-window.danfo = danfo
+// window.danfo = danfo
 
 // https://github.com/nhn/tui.editor
 import { Editor as MarkdownEditor,} from 'https://esm.sh/@toast-ui/editor@3.2.2'
@@ -189,8 +189,9 @@ window.activeState = stateManager.activeState
         // helpers
         // 
             let onRun = () => {}
-            const makeOnRunJs = async (editor, outputArea) => async () => {
+            const makeOnRunJs = (editor, outputArea) => async () => {
                 removeAllChildElements(outputArea)
+                console.log(`running cell ${cellId}`)
                 const { runtimeError, syntaxError } = await runCode({
                     code: editor.code,
                     runtime,
@@ -268,7 +269,7 @@ window.activeState = stateManager.activeState
                 >
                     delete (above)
             </BasicButton>`
-            const RunButton = (onRun)=>html`<BasicButton background-color=var(--theme-green) onClick=${onRun}>run</BasicButton>`
+            const RunButton = (onRun)=>html`<BasicButton background-color=var(--theme-green) onClick=${(...args)=>{console.log("onrun ",onRun);onRun(...args)}}>run</BasicButton>`
         
         // 
         // type
@@ -302,10 +303,6 @@ window.activeState = stateManager.activeState
                     const originalName = name
                     name = toCamelCase(name)
                     if (type == "text/csv") {
-                        if (!hasDataFrameImport) {
-                            hasDataFrameImport = true
-                            codeChunks.unshift(`import {  } from 'https://esm.sh/danfojs@1.1.2/dist/danfojs-browser/src/index.js?dev'`)
-                        }
                         codeChunks.unshift(`/*MAGIC: var ${name} = contents of ${originalName}*/`)
                         codeChunks.push(`var ${name}AsBlob = new Blob([${name}], {type: "text/csv;charset=utf-8"})`)
                         codeChunks.push(`var ${name}DataFrame = `)
@@ -356,7 +353,7 @@ window.activeState = stateManager.activeState
                     }
                 })
                 markdownEditor.on('change', (value)=>{
-                    getCellData().coreContent = markdownEditor.getMarkdown()
+                    stateManager.getCellFromId(cellId).coreContent = markdownEditor.getMarkdown()
                 })
                 element.append(
                     html`<Row gap=0.5em padding=1em justify-content=center width="100%">
@@ -396,6 +393,7 @@ window.activeState = stateManager.activeState
                 const newCellData = { cellId: Math.random(), type: "file", coreContent: "", fileInfos}
                 for (let each of fileObjects) {
                     let dataPromise
+                    // if (fileObject.type == "text/csv") {
                     if (fileObject.type.startsWith("text/")) {
                         dataPromise = fileObject.text()
                     } else {

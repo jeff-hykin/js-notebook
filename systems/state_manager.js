@@ -173,7 +173,11 @@ let prevState = activeState
             yaml.stringify(activeState)
             prevState = structuredClone(activeState)
         } catch (error) {
-            activeState = prevState
+            const stateClone = structuredClone(prevState)
+            for (const [key, value] of Object.entries(activeState)) {
+                delete activeState[key]
+            }
+            Object.assign(activeState, stateClone)
             throw error
         }
 
