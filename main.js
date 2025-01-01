@@ -286,12 +286,13 @@ window.activeState = stateManager.activeState
                         stateManager.activeStateWasUpdated()
                     },
                 })
+                onRun = makeOnRunJs(editor, outputArea)
                 element.append(editor, outputArea)
                 element.append(
                     html`<Row gap=0.5em padding=1em justify-content=center width="100%">
                         ${newJsCellButtton}
                         ${newMarkdownCellButtton}
-                        ${RunButton(makeOnRunJs(editor, outputArea))}
+                        ${RunButton(onRun)}
                         ${deleteCellButton}
                     </Row>`
                 )
