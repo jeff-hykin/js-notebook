@@ -1,6 +1,7 @@
 import storageObject from "https://esm.sh/gh/jeff-hykin/storage-object@0.0.3.5/main.js"
 import { dump, load } from "https://esm.sh/js-yaml@4.1.0/"
-import debounce from "https://esm.sh/lodash@4.17.21/debounce.js"
+// import debounce from "https://esm.sh/lodash@4.17.21/debounce.js"
+import throttle from "https://esm.sh/lodash@4.17.21/throttle.js"
 const yaml = { stringify: dump, parse: load }
 
 const localStorageKey = "activeState"
@@ -157,7 +158,7 @@ let prevState = activeState
 // 
     const stateChangeCallbacks = new Set([
         // save to local storage
-        debounce(()=>{
+        throttle(()=>{
             storageObject[localStorageKey] = yaml.stringify(activeState)
         }, 1000)
     ])
