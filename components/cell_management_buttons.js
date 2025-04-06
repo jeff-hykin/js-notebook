@@ -8,6 +8,9 @@ const { html } = Elemental({
 })
 
 export function CellManagementButtons({cellId, mainCellElement, stateManager, createNewCell, runButtonOnClick} = {}) {
+    if (!stateManager) {
+        throw new Error(`stateManager must be provided to CellManagementButtons`)
+    }
     let runButton
     if (runButtonOnClick) {
         runButton = html`<BasicButton background-color=${`var(--theme-green)`/*FIXME: use theme from stateManager, and hook up to theme change event*/} onClick=${runButtonOnClick}>

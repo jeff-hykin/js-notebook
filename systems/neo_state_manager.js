@@ -57,41 +57,21 @@ const defaultTheme = {
 export class StateManager {
     constructor({
         coldCellSystem,
-        loadStateCallbacks,
-        stateChangeCallbacks,
+        loadStateCallbacks=[],
+        stateChangeCallbacks=[],
         onError=(message, error, source,)=>console.error(message),
     }={}) {
-        let { config, theme, cells, fileSystemData, } = structuredClone(coldCellSystem)
+        let { config, theme, cells, fileSystemData, } = structuredClone(coldCellSystem||{})
         this._config = config || {}
-        this._theme = theme || {}
+        this._theme = theme || {...defaultTheme}
         this._fileSystemData = fileSystemData || {}
 
-        this._initStackFrame = new Error().stack.stack.split("\n").slice(2).join("\n").trim()
+        this._initStackFrame = new Error().stack.split("\n").slice(2).join("\n").trim()
         this.runtime = makeRuntime()
         this.activeState = structuredClone({
             cells: cells||[],
-            // DEBUGGING override
-            cells: [
-                // {
-                //     cellId: Math.random(),
-                //     type: "file",
-                //     filePath: "test.js",
-                //     coreContent: "howdy howdy",
-                //     varName: "test",
-                // },
-                {
-                    cellId: Math.random(),
-                    type: "jsCode",
-                    coreContent: "import { showToast } from \"https://esm.sh/gh/jeff-hykin/good-component@0.3.0/main/actions.js\"\nconsole.log('howdy')\n\nshowToast('hello!')\n\n",
-                },
-                {
-                    cellId: Math.random(),
-                    type: "markdown",
-                    coreContent: "console.log('howdy')\n\n\n\n",
-                },
-            ]
         })
-        this.prevState = structuredClone(activeState)
+        this.prevState = structuredClone(this.activeState)
         this.loadStateCallbacks = new Set([...loadStateCallbacks])
         this.stateChangeCallbacks = new Set([...stateChangeCallbacks])
     }
@@ -184,7 +164,7 @@ export class StateManager {
     }
     themeToCssString() {
         let styleChunks = []
-        for (const [key, value] of Object.entries({...this.activeTheme, })) {
+        for (const [key, value] of Object.entries(this._theme)) {
             styleChunks.push(`--theme-${toKebabCase(key)}: ${value};`)
         }
         return styleChunks.join("\n")

@@ -25,7 +25,7 @@ export function JsCell({cellId, coreContent, style, stateManager, createNewCell 
         language: javascript(),
         onChange: () => {
             stateManager.getCellFromId(cellId).coreContent = editor.code
-            stateManager.activeStateWasUpdated()
+            stateManager._activeStateWasUpdated() // FIXME: redo this interface
         },
     })
     const onRun = makeOnRunJs({editor, outputArea, stateManager, cellId})
