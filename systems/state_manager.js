@@ -63,7 +63,7 @@ export class StateManager {
     }={}) {
         let { config, theme, cells, fileSystemData, } = structuredClone(jsonCellSystem||{})
         this._config = config || {}
-        this._theme = theme || {...defaultTheme}
+        this._theme = {...theme,...defaultTheme}
         this._fileSystemData = fileSystemData || {}
 
         this._initStackFrame = new Error().stack.split("\n").slice(2).join("\n").trim()
