@@ -8,3 +8,11 @@ export { deepCopy, deepCopySymbol, allKeyDescriptions, deepSortObject, shallowSo
 
 export { isValidIdentifier } from "https://esm.sh/gh/jeff-hykin/good-js@1.13.1.0/source/flattened/is_valid_identifier.js"
 export { toRepresentation } from "https://esm.sh/gh/jeff-hykin/good-js@1.13.5.0/source/flattened/to_representation.js"
+
+export { Event, trigger, everyTime, once } from "https://esm.sh/gh/jeff-hykin/good-js@1.15.0.0/source/events.js"
+
+
+import { get } from 'https://esm.sh/gh/jeff-hykin/good-js@1.15.0.0/source/flattened/get.js'
+import { set } from 'https://esm.sh/gh/jeff-hykin/good-js@1.15.0.0/source/flattened/set.js'
+import { remove } from 'https://esm.sh/gh/jeff-hykin/good-js@1.15.0.0/source/flattened/remove.js'
+import { merge } from 'https://esm.sh/gh/jeff-hykin/good-js@1.15.0.0/source/flattened/merge.js'
