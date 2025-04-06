@@ -2,13 +2,15 @@ import { Elemental, passAlongProps } from "../imports/elemental.js"
 import { css, components, Column, Row, askForFiles, Code, Input, Button, Checkbox, Dropdown, popUp, cx, } from "../imports/good_component.js"
 import { addDynamicStyleFlags, setupStyles, createCssClass, setupClassStyles, hoverStyleHelper, combineClasses, mergeStyles, AfterSilent, removeAllChildElements } from "../imports/good_component.js"
 
+import CM from 'https://esm.sh/gh/jeff-hykin/codemirror_esm@0.0.2.2/main.js'
+const { javascript } = CM["@codemirror/lang-javascript"]
+
 import { OutputArea } from "./output_area.js"
 import { TextEditor } from "./text_editor.js"
 import { CellManagementButtons } from "./cell_management_buttons.js"
 import { BaseCell } from "./base_cell.js"
 
 const { html } = Elemental({
-    BasicButton,
     Row,
     Column,
 })
@@ -26,6 +28,7 @@ export function JsCell({cellId, coreContent, style, stateManager, createNewCell 
             stateManager.activeStateWasUpdated()
         },
     })
+    const onRun = makeOnRunJs({editor, outputArea, stateManager, cellId})
     element.append(
         editor,
         outputArea,
@@ -34,14 +37,14 @@ export function JsCell({cellId, coreContent, style, stateManager, createNewCell 
             stateManager,
             createNewCell,
             mainCellElement: element,
-            runButtonOnClick: makeOnRunJs({editor, outputArea, stateManager}),
+            runButtonOnClick: onRun,
         }),
     )
     mergeStyles(element, style)
     return element
 }
 
-const makeOnRunJs = ({editor, outputArea, stateManager}) => async () => {
+const makeOnRunJs = ({editor, outputArea, stateManager, cellId}) => async () => {
     removeAllChildElements(outputArea)
     console.log(`running cell ${cellId}`)
     const { runtimeError, syntaxError } = await stateManager.runCode(editor.code, {outputElement: outputArea})

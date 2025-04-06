@@ -37,7 +37,6 @@ export function MarkdownCell({cellId, coreContent, style, stateManager, createNe
             stateManager,
             createNewCell,
             mainCellElement: element,
-            runButtonOnClick: makeOnRunJs({editor, outputArea, stateManager}),
         })
     )
     return element
