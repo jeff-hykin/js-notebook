@@ -3,8 +3,10 @@ import { get, set, remove, merge } from "../imports/good_js.js"
 import { zipParse, zipCreate } from '../imports/good_js.js'
 import { makeRuntime, runCode } from "../tools/js_runtime.js"
 import { dump, load } from "../imports/js_yaml.js"
+import { toKebabCase } from "../imports/good_js.js"
 const yaml = { stringify: dump, parse: load }
 
+// NOTE: despite mentioning a theme, this whole file should be completely usable without a browser/DOM
 const defaultTheme = {
     name: "default-dark",
     background: "#546E7A",
@@ -70,17 +72,17 @@ export class StateManager {
             cells: cells||[],
             // DEBUGGING override
             cells: [
-                {
-                    cellId: Math.random(),
-                    type: "file",
-                    filePath: "test.js",
-                    coreContent: "howdy howdy",
-                    varName: "test",
-                },
+                // {
+                //     cellId: Math.random(),
+                //     type: "file",
+                //     filePath: "test.js",
+                //     coreContent: "howdy howdy",
+                //     varName: "test",
+                // },
                 {
                     cellId: Math.random(),
                     type: "jsCode",
-                    coreContent: "console.log('howdy')\n\n\n\n",
+                    coreContent: "import { showToast } from \"https://esm.sh/gh/jeff-hykin/good-component@0.3.0/main/actions.js\"\nconsole.log('howdy')\n\nshowToast('hello!')\n\n",
                 },
                 {
                     cellId: Math.random(),
@@ -179,6 +181,13 @@ export class StateManager {
     // 
     toYaml() {
         return yaml.stringify(this.activeState)
+    }
+    themeToCssString() {
+        let styleChunks = []
+        for (const [key, value] of Object.entries({...this.activeTheme, })) {
+            styleChunks.push(`--theme-${toKebabCase(key)}: ${value};`)
+        }
+        return styleChunks.join("\n")
     }
 
 

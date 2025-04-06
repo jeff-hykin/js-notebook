@@ -1,5 +1,6 @@
 import storageObject from "../imports/storage_object.js"
 import { dump, load } from "../imports/js_yaml.js"
+import { toKebabCase } from "../imports/good_js.js"
 // import debounce from "https://esm.sh/lodash@4.17.21/debounce.js"
 import throttle from "https://esm.sh/lodash@4.17.21/throttle.js"
 import { makeRuntime, runCode as pureRunCode } from "../tools/js_runtime.js"
@@ -118,17 +119,17 @@ let prevState = activeState
             settings: {
             },
             cells: [
-                {
-                    cellId: Math.random(),
-                    type: "file",
-                    filePath: "test.js",
-                    coreContent: "howdy howdy",
-                    varName: "test",
-                },
+                // {
+                //     cellId: Math.random(),
+                //     type: "file",
+                //     filePath: "test.js",
+                //     coreContent: "howdy howdy",
+                //     varName: "test",
+                // },
                 {
                     cellId: Math.random(),
                     type: "jsCode",
-                    coreContent: "console.log('howdy')\n\n\n\n",
+                    coreContent: "import { showToast } from \"https://esm.sh/gh/jeff-hykin/good-component@0.3.0/main/actions.js\"\nconsole.log('howdy')\n\nshowToast('hello!')\n\n",
                 },
                 {
                     cellId: Math.random(),
@@ -246,3 +247,11 @@ export const defaultTheme = {
     "markdownCoralRed": "#ef6767",
 }
 export const activeTheme = {...defaultTheme}
+
+export function themeToCssString() {
+    let styleChunks = []
+    for (const [key, value] of Object.entries(activeTheme)) {
+        styleChunks.push(`--theme-${toKebabCase(key)}: ${value};`)
+    }
+    return styleChunks.join("\n")
+}
