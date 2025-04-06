@@ -13,12 +13,13 @@ export function CellManagementButtons({cellId, mainCellElement, stateManager, cr
     }
     let runButton
     if (runButtonOnClick) {
-        runButton = html`<BasicButton background-color=${`var(--theme-green)`/*FIXME: use theme from stateManager, and hook up to theme change event*/} onClick=${runButtonOnClick}>
+        runButton = html`<BasicButton background-color=${`var(--theme-green)`} onClick=${runButtonOnClick}>
             run
         </BasicButton>`
     }
     const element = html`<Row gap=0.5em padding=1em justify-content=center width="100%" position=absolute bottom=-2rem>
         <BasicButton
+            background-color=${`var(--theme-normal-button, --theme-blue)`}
             onclick=${(event)=>{
                 const newCellData = {
                     cellId: Math.random(),
@@ -33,6 +34,7 @@ export function CellManagementButtons({cellId, mainCellElement, stateManager, cr
                 add JS cell
         </BasicButton>
         <BasicButton
+            background-color=${`var(--theme-normal-button, --theme-blue)`}
             onclick=${(event)=>{
                 const newCellData = {
                     cellId: Math.random(),
@@ -48,7 +50,7 @@ export function CellManagementButtons({cellId, mainCellElement, stateManager, cr
         </BasicButton>
         ${runButton}
         <BasicButton
-            background-color=${`var(--theme-red)`/*FIXME: use theme from stateManager, and hook up to theme change event*/}
+            background-color=${`var(--theme-red)`}
             onClick=${()=>{
                 if (mainCellElement) {
                     stateManager.removeCellData({cellId})

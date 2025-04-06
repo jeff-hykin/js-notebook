@@ -15,11 +15,16 @@ const defaultTheme = {
     secondaryForeground: "whitesmoke",
     // secondaryBackground: "#272c35",
     secondaryBackground: "#292e37",
-    green: "turquoise",
-    red: "salmon",
+    // green: "turquoise",
+    green: "#349a90",
+    // red: "salmon",
+    red: "#ba6d64",
+    // blue: "cornflowerblue",
     blue: "cornflowerblue",
     yellow: "#E5C07B",
     accent: "rgba(3,105,161)",
+
+    normalButton: "#3d5072",
     
     "markdownDarkCharcoal": "#121212",
     "markdownCharcoalGray": "#232428",

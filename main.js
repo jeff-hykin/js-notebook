@@ -100,7 +100,21 @@ import { dump, load } from "./imports/js_yaml.js"
                 </Button> -->
         </body>
     `
-    loadDataAndUiFromYaml(storageObject.activeState)
+    // loadDataAndUiFromYaml(storageObject.activeState)
+    loadDataAndUiFromYaml(JSON.stringify({
+        cells: [
+            {
+                cellId: Math.random(),
+                type: "jsCode",
+                coreContent: "import { showToast } from \"https://esm.sh/gh/jeff-hykin/good-component@0.3.0/main/actions.js\"\nconsole.log('howdy')\n\nshowToast('hello!')\n\n",
+            },
+            {
+                cellId: Math.random(),
+                type: "markdown",
+                coreContent: "# Howdy!\nhow's it going?",
+            },
+        ]
+    }))
 
 // 
 // connect conceptual system to UI
