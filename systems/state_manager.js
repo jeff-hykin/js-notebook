@@ -56,12 +56,12 @@ const defaultTheme = {
 
 export class StateManager {
     constructor({
-        coldCellSystem,
+        jsonCellSystem,
         loadStateCallbacks=[],
         stateChangeCallbacks=[],
         onError=(message, error, source,)=>console.error(message),
     }={}) {
-        let { config, theme, cells, fileSystemData, } = structuredClone(coldCellSystem||{})
+        let { config, theme, cells, fileSystemData, } = structuredClone(jsonCellSystem||{})
         this._config = config || {}
         this._theme = theme || {...defaultTheme}
         this._fileSystemData = fileSystemData || {}
@@ -160,7 +160,12 @@ export class StateManager {
     // serializing
     // 
     toYaml() {
-        return yaml.stringify(this.activeState)
+        return yaml.stringify({
+            config: this._config,
+            theme: this._theme,
+            fileSystemData: this._fileSystemData,
+            cells: this.activeState.cells,
+        })
     }
     themeToCssString() {
         let styleChunks = []

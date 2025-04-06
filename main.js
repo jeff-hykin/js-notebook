@@ -30,7 +30,10 @@ import { dump, load } from "./imports/js_yaml.js"
         ...components,
     })
     const stateManager = new StateManager({
-        coldCellSystem: {
+        jsonCellSystem: {
+            config: {},
+            theme: {},
+            fileSystemData: {},
             cells: [
                 {
                     cellId: Math.random(),
