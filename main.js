@@ -8,7 +8,7 @@ import { focusOn } from './tools/browser_help.js'
 
 import storageObject from "./imports/storage_object.js"
 
-import { StateManager } from './systems/neo_state_manager.js'
+import { StateManager } from './systems/state_manager.js'
 
 import { Cell } from "./components/cell.js"
 import { dump, load } from "./imports/js_yaml.js"
