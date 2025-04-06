@@ -9,14 +9,17 @@ const yaml = { stringify: dump, parse: load }
 // NOTE: despite mentioning a theme, this whole file should be completely usable without a browser/DOM
 const defaultTheme = {
     name: "default-dark",
-    background: "#546E7A",
+    // background: "#546E7A",
+    background: "#121212",
     foreground: "white",
     secondaryForeground: "whitesmoke",
-    secondaryBackground: "#272c35",
+    // secondaryBackground: "#272c35",
+    secondaryBackground: "#292e37",
     green: "turquoise",
     red: "salmon",
     blue: "cornflowerblue",
     yellow: "#E5C07B",
+    accent: "rgba(3,105,161)",
     
     "markdownDarkCharcoal": "#121212",
     "markdownCharcoalGray": "#232428",
@@ -174,7 +177,9 @@ export class StateManager {
         }
         return styleChunks.join("\n")
     }
-
+    getCodeMirrorTheme() {
+        return {settings: structuredClone(this._theme)}
+    }
 
     // 
     // serial events

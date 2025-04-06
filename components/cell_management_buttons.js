@@ -17,7 +17,7 @@ export function CellManagementButtons({cellId, mainCellElement, stateManager, cr
             run
         </BasicButton>`
     }
-    const element = html`<Row gap=0.5em padding=1em justify-content=center width="100%">
+    const element = html`<Row gap=0.5em padding=1em justify-content=center width="100%" position=absolute bottom=-2rem>
         <BasicButton
             onclick=${(event)=>{
                 const newCellData = {

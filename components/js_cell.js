@@ -23,11 +23,14 @@ export function JsCell({cellId, coreContent, style, stateManager, createNewCell 
         width: "100%",
         onRun: () => onRun(),
         language: javascript(),
+        themeObject: stateManager.getCodeMirrorTheme(),
         onChange: () => {
             stateManager.getCellFromId(cellId).coreContent = editor.code
             stateManager._activeStateWasUpdated() // FIXME: redo this interface
         },
     })
+    editor.style.borderRadius = "1rem"
+    editor.style.overflow = "hidden"
     const onRun = makeOnRunJs({editor, outputArea, stateManager, cellId})
     element.append(
         editor,

@@ -11,5 +11,8 @@ export function OutputArea() {
         whiteSpace: "pre",
         fontSize: "0.8em",
         background: "var(--theme-background)",
+        borderRadius: "1rem",
+        width: "100%",
+        "margin-bottom": "1rem",
     })
 }

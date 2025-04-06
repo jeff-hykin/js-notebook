@@ -34,22 +34,22 @@ import { dump, load } from "./imports/js_yaml.js"
             config: {},
             theme: {},
             fileSystemData: {},
-            cells: [
-                {
-                    cellId: Math.random(),
-                    type: "jsCode",
-                    coreContent: "import { showToast } from \"https://esm.sh/gh/jeff-hykin/good-component@0.3.0/main/actions.js\"\nconsole.log('howdy')\n\nshowToast('hello!')\n\n",
-                },
-                {
-                    cellId: Math.random(),
-                    type: "markdown",
-                    coreContent: "console.log('howdy')\n\n\n\n",
-                },
-            ]
+            // cells: [
+            //     {
+            //         cellId: Math.random(),
+            //         type: "jsCode",
+            //         coreContent: "import { showToast } from \"https://esm.sh/gh/jeff-hykin/good-component@0.3.0/main/actions.js\"\nconsole.log('howdy')\n\nshowToast('hello!')\n\n",
+            //     },
+            //     {
+            //         cellId: Math.random(),
+            //         type: "markdown",
+            //         coreContent: "# Howdy!\nhow's it going?",
+            //     },
+            // ]
         },
     })
     let lineHeight = `1.5em`
-    const cellContainer = html`<Column name="CellContainer" width="100%" position="relative"></Column>`
+    const cellContainer = html`<Column name="CellContainer" width="100%" position="relative" align-items=center justify-content=center></Column>`
     const themeStyleElement = document.createElement("style")
 // 
 // body
