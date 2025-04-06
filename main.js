@@ -11,13 +11,16 @@ import { pathPieces } from "./imports/good_js.js"
 import { zipParse, zipCreate } from './imports/good_js.js'
 // import { deepCopy, deepCopySymbol, allKeyDescriptions, deepSortObject, shallowSortObject, isGeneratorObject,isAsyncIterable, isSyncIterable, isIterableTechnically, isSyncIterableObjectOrContainer, allKeys } from "https://deno.land/x/good@1.13.2.0/value.js"
 import { deepCopy, deepCopySymbol, allKeyDescriptions, deepSortObject, shallowSortObject, isGeneratorObject,isAsyncIterable, isSyncIterable, isIterableTechnically, isSyncIterableObjectOrContainer, allKeys } from "./imports/good_js.js"
-import { dump, load } from "./imports/js_yaml.js"
-const yaml = { stringify: dump, parse: load }
-
 import { TextEditor } from "./components/text_editor.js"
 import * as stateManager from './systems/state_manager.js'
-// import * as danfo from './tools/danfo.js'
 import { focusOn } from './tools/browser_help.js'
+import { dump, load } from "./imports/js_yaml.js"
+
+import { BasicButton } from "./components/basic_button.js"
+import { OutputArea } from "./components/basic_button.js"
+
+const yaml = { stringify: dump, parse: load }
+// import * as danfo from './tools/danfo.js'
 // import * as danfo from 'https://esm.sh/danfojs@1.1.2/dist/danfojs-browser/src/index.js?dev'
     // as part of danfojs, we could reuse these to minimize import size:
         // xlsx@0.17.2/esnext/xlsx.development.mjs
@@ -157,30 +160,6 @@ window.activeState = stateManager.activeState
 // Components
 // 
 // 
-    function BasicButton(props) {
-        const element = html`<Button />`
-        passAlongProps(element, {
-            style: `
-                border-radius: 1em;
-                box-shadow: 0 4px 5px 0 rgba(0,0,0,0.14), 0 1px 10px 0 rgba(0,0,0,0.12), 0 2px 4px -1px rgba(0,0,0,0.3);
-            `,
-        })
-        passAlongProps(element, props)
-        return element
-    }
-    function OutputArea() {
-        return html`<Column
-            font-family="monospace"
-            white-space="pre"
-            fontSize=0.8em
-            background="var(--theme-background)"
-            width="100%"
-            padding="0.5rem"
-            overflow="auto"
-            max-height="20em"
-            />
-        `
-    }
     function Cell({cellId, type, coreContent, fileInfos, style, }={}) {
         const element = html`<Column id=${`cell-${cellId}`} name="Cell" border-top="2px solid var(--theme-background)" width="100%" position="relative"></Column>`
         element.transistion = `all 0.2s ease-in-out`
