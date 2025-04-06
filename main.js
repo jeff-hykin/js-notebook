@@ -1,17 +1,17 @@
-import { Elemental, passAlongProps } from "https://esm.sh/gh/jeff-hykin/elemental@0.6.4/main/deno.js"
-import { css, components, Column, Row, askForFiles, Code, Input, Button, Checkbox, Dropdown, popUp, cx, } from "https://esm.sh/gh/jeff-hykin/good-component@0.3.0/elements.js"
-// import { css, components, Column, Row, askForFiles, Code, Input, Button, Checkbox, Dropdown, popUp, cx, } from "/Users/jeffhykin/repos/good-component/elements.js"
-import storageObject from "https://esm.sh/gh/jeff-hykin/storage-object@0.0.3.5/main.js"
-import { fadeIn, fadeOut } from "https://esm.sh/gh/jeff-hykin/good-component@0.3.0/main/animations.js"
+import { Elemental, passAlongProps } from "./imports/elemental.js"
+import { css, components, Column, Row, askForFiles, Code, Input, Button, Checkbox, Dropdown, popUp, cx, } from "./imports/good_component.js"
+import { fadeIn, fadeOut } from "./imports/good_component.js"
+import storageObject from "./imports/storage_object.js"
 import { showToast } from "https://esm.sh/gh/jeff-hykin/good-component@0.3.0/main/actions.js"
-import { addDynamicStyleFlags, setupStyles, createCssClass, setupClassStyles, hoverStyleHelper, combineClasses, mergeStyles, AfterSilent, removeAllChildElements } from "https://esm.sh/gh/jeff-hykin/good-component@0.3.0/main/helpers.js"
-import { zip, enumerate, count, permute, combinations, wrapAroundGet } from "https://esm.sh/gh/jeff-hykin/good-js@1.13.5.1/source/array.js"
-import { toCamelCase } from "https://esm.sh/gh/jeff-hykin/good-js@1.13.5.1/source/flattened/to_camel_case.js"
-import { toKebabCase } from "https://esm.sh/gh/jeff-hykin/good-js@1.13.5.1/source/flattened/to_kebab_case.js"
-import { pathPieces } from "https://esm.sh/gh/jeff-hykin/good-js@1.13.5.1/source/flattened/path_pieces.js"
+import { addDynamicStyleFlags, setupStyles, createCssClass, setupClassStyles, hoverStyleHelper, combineClasses, mergeStyles, AfterSilent, removeAllChildElements } from "./imports/good_component.js"
+import { zip, enumerate, count, permute, combinations, wrapAroundGet } from "./imports/good_js.js"
+import { toCamelCase } from "./imports/good_js.js"
+import { toKebabCase } from "./imports/good_js.js"
+import { pathPieces } from "./imports/good_js.js"
+import { zipParse, zipCreate } from './imports/good_js.js'
 // import { deepCopy, deepCopySymbol, allKeyDescriptions, deepSortObject, shallowSortObject, isGeneratorObject,isAsyncIterable, isSyncIterable, isIterableTechnically, isSyncIterableObjectOrContainer, allKeys } from "https://deno.land/x/good@1.13.2.0/value.js"
-import { deepCopy, deepCopySymbol, allKeyDescriptions, deepSortObject, shallowSortObject, isGeneratorObject,isAsyncIterable, isSyncIterable, isIterableTechnically, isSyncIterableObjectOrContainer, allKeys } from "https://esm.sh/gh/jeff-hykin/good-js@1.13.2.0/source/value.js"
-import { dump, load } from "https://esm.sh/js-yaml@4.1.0/"
+import { deepCopy, deepCopySymbol, allKeyDescriptions, deepSortObject, shallowSortObject, isGeneratorObject,isAsyncIterable, isSyncIterable, isIterableTechnically, isSyncIterableObjectOrContainer, allKeys } from "./imports/good_js.js"
+import { dump, load } from "./imports/js_yaml.js"
 const yaml = { stringify: dump, parse: load }
 
 import { TextEditor } from "./components/text_editor.js"
@@ -269,7 +269,9 @@ window.activeState = stateManager.activeState
                 >
                     delete (above)
             </BasicButton>`
-            const RunButton = (onRun)=>html`<BasicButton background-color=var(--theme-green) onClick=${(...args)=>{console.log("onrun ",onRun);onRun(...args)}}>run</BasicButton>`
+            const RunButton = (onRun)=>html`<BasicButton background-color=var(--theme-green) onClick=${(...args)=>{console.log("onrun ",onRun);onRun(...args)}}>
+                run
+            </BasicButton>`
         
         // 
         // type
