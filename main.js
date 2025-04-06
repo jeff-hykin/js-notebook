@@ -480,8 +480,16 @@ window.activeState = stateManager.activeState
 // 
     let lineHeight = `1.5em`
     document.body = html`
-        <body font-size=15px background-color=var(--theme-secondary-background) color=var(--theme-secondary-foreground) overflow=scroll width=100vw padding=0 margin=0>
-            ${YamlDownloadButton()}
+        <body
+            font-size=15px
+            background-color=var(--theme-secondary-background)
+            color=var(--theme-secondary-foreground)
+            overflow=scroll
+            width="calc(100vw - 1rem)"
+            padding=0
+            margin=0
+            >
+                ${YamlDownloadButton()}
         </body>
     `
     loadDataAndUiFromYaml(storageObject.activeState)
