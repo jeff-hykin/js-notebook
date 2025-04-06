@@ -95,7 +95,7 @@ export const makeRuntime = ({ randomSeed, }={}) => {
  * console.log("final runtime is:", runtime)
  * ```
  */
-export const runCode = async ({ code, runtime, outputElement, cellNumber=0 }) => {
+export const runCode = async ({ code, runtime, outputElement }) => {
     code = convertImports(code)
     // global overrides
     runtime.globalThis = runtime.globalThis || runtime

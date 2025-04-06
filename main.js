@@ -17,7 +17,7 @@ import { focusOn } from './tools/browser_help.js'
 import { dump, load } from "./imports/js_yaml.js"
 
 import { BasicButton } from "./components/basic_button.js"
-import { OutputArea } from "./components/basic_button.js"
+import { OutputArea } from "./components/output_area.js"
 
 const yaml = { stringify: dump, parse: load }
 // import * as danfo from './tools/danfo.js'
