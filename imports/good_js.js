@@ -11,8 +11,7 @@ export { toRepresentation } from "https://esm.sh/gh/jeff-hykin/good-js@1.13.5.0/
 
 export { Event, trigger, everyTime, once } from "https://esm.sh/gh/jeff-hykin/good-js@1.15.0.0/source/events.js"
 
-
-import { get } from 'https://esm.sh/gh/jeff-hykin/good-js@1.15.0.0/source/flattened/get.js'
-import { set } from 'https://esm.sh/gh/jeff-hykin/good-js@1.15.0.0/source/flattened/set.js'
-import { remove } from 'https://esm.sh/gh/jeff-hykin/good-js@1.15.0.0/source/flattened/remove.js'
-import { merge } from 'https://esm.sh/gh/jeff-hykin/good-js@1.15.0.0/source/flattened/merge.js'
+export { get } from 'https://esm.sh/gh/jeff-hykin/good-js@1.15.0.0/source/flattened/get.js'
+export { set } from 'https://esm.sh/gh/jeff-hykin/good-js@1.15.0.0/source/flattened/set.js'
+export { remove } from 'https://esm.sh/gh/jeff-hykin/good-js@1.15.0.0/source/flattened/remove.js'
+export { merge } from 'https://esm.sh/gh/jeff-hykin/good-js@1.15.0.0/source/flattened/merge.js'
