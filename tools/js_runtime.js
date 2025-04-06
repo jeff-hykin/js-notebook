@@ -1,6 +1,6 @@
 import { convertImports } from "./parsing.js"
-import { isValidIdentifier } from "https://esm.sh/gh/jeff-hykin/good-js@1.13.1.0/source/flattened/is_valid_identifier.js"
-import { toRepresentation } from "https://esm.sh/gh/jeff-hykin/good-js@1.13.5.0/source/flattened/to_representation.js"
+import { isValidIdentifier } from "../imports/good_js.js"
+import { toRepresentation } from "../imports/good_js.js"
 
 const { console, Math, Date, setTimout, setInterval, clearTimeout, clearInterval, fetch, Uint8Array, Map, Set, URL, WebAssembly, Array, Number, Symbol, Promise, RegExp, Error, document } = globalThis
 const elementLogger = (element, tag, ...args)=>{
