@@ -58,7 +58,7 @@ export function CellManagementButtons({cellId, mainCellElement, stateManager, cr
                 }
             }}
             >
-                delete (above)
+                delete
         </BasicButton>
     </Row>`
     return element

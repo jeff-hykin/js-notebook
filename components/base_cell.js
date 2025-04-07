@@ -9,7 +9,7 @@ export function BaseCell({cellId }={}) {
         width: "100%",
         position: "relative",
         transistion: `all 0.2s ease-in-out`,
-        "max-width": "61.4rem",
+        "max-width": "61rem",
         "border": "solid var(--theme-accent) 1px",
         "border-radius": "1rem",
         "margin-top": "2rem",
