@@ -14,11 +14,9 @@ import { Cell } from "./components/cell.js"
 import { dump, load } from "./imports/js_yaml.js"
 
 // TODO:
-    // cleanup main.js
-    // switch to new state system
-    // fixup styling of cells
     // download-upload iframe output
     // html download
+    // file system panel
     // LATER:
         // connect theme hooks
         // connect config hooks
