@@ -25,7 +25,7 @@ const { html } = Elemental({
 export function FileSystemPanel({ connectOnReceiveChange, onPushChange, stateManager, style }={}) {
 
     const pathToElement = {}
-    const element = html`<Column visibility=none padding=2rem></Column>`
+    const element = html`<Column visibility=hidden padding=2rem></Column>`
     for (const [path, data] of Object.entries(stateManager.fileSystemData)) {
         const newElement = html`<Row>
             <span class=path>${path}</span>
