@@ -163,6 +163,9 @@ export class StateManager {
         )
         this._theme = merge({ oldData: this._theme, newData: value})
     }
+
+    get fileSystemData() { return Object.freeze(structuredClone(this._fileSystemData))  }
+    // set fileSystemData(value) {
     
     // 
     // serializing
