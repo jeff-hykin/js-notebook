@@ -13,12 +13,13 @@ export function CellManagementButtons({cellId, mainCellElement, stateManager, cr
     }
     let runButton
     if (runButtonOnClick) {
-        runButton = html`<BasicButton background-color=${`var(--theme-green)`} onClick=${runButtonOnClick}>
+        runButton = html`<BasicButton pointer-events=all background-color=${`var(--theme-green)`} onClick=${runButtonOnClick}>
             run
         </BasicButton>`
     }
-    const element = html`<Row gap=0.5em padding=1em justify-content=center width="100%" position=absolute bottom=-2rem>
+    const element = html`<Row pointer-events=none gap=0.5em padding=1em justify-content=center width="100%" position=absolute bottom=-2rem>
         <BasicButton
+            pointer-events=all
             background-color=${`var(--theme-normal-button, --theme-blue)`}
             onclick=${(event)=>{
                 const newCellData = {
@@ -34,6 +35,7 @@ export function CellManagementButtons({cellId, mainCellElement, stateManager, cr
                 add JS cell
         </BasicButton>
         <BasicButton
+            pointer-events=all
             background-color=${`var(--theme-normal-button, --theme-blue)`}
             onclick=${(event)=>{
                 const newCellData = {
@@ -50,6 +52,7 @@ export function CellManagementButtons({cellId, mainCellElement, stateManager, cr
         </BasicButton>
         ${runButton}
         <BasicButton
+            pointer-events=all
             background-color=${`var(--theme-red)`}
             onClick=${()=>{
                 if (mainCellElement) {
