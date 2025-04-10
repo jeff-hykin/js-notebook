@@ -136,6 +136,7 @@ const scriptRel = 'modulepreload';const assetsURL = function(dep) { return "/"+d
 
 // import { capitalize, indent, toCamelCase, digitsToEnglishArray, toPascalCase, toKebabCase, toSnakeCase, toScreamingKebabCase, toScreamingSnakeCase, toRepresentation, toString, regex, findAll, iterativelyFindAll, escapeRegexMatch, escapeRegexReplace, extractFirst, isValidIdentifier, removeCommonPrefix } from "https://esm.sh/gh/jeff-hykin/good-js@1.13.2.0/source/string.js"
 
+// FIXME: import defaul doesn't work without {}'s
 // FIXME: detect destructured top level assignments for auto-export
 
 const parser = await parserFromWasm(javascript$2); // path or Uint8Array
@@ -1112,11 +1113,9 @@ function Cell({cellId, type, coreContent, style, stateManager }={}) {
 // element tooling
 
 // TODO:
-    // cleanup main.js
-    // switch to new state system
-    // fixup styling of cells
     // download-upload iframe output
     // html download
+    // file system panel
     // LATER:
         // connect theme hooks
         // connect config hooks
