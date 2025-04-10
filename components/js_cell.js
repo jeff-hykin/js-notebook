@@ -17,6 +17,31 @@ const { html } = Elemental({
 
 export function JsCell({cellId, coreContent, style, stateManager, createNewCell }={}) {
     const element = BaseCell({cellId})
+    const iframe = document.createElement("iframe")
+    iframe.srcdoc = `
+        <!DOCTYPE html>
+        <html lang='en'>
+        <head>
+            <meta charset='UTF-8'>
+            <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+            <title>Iframe Content</title>
+            <style>
+                body {
+                    background-color: lightyellow;
+                    font-family: Arial, sans-serif;
+                }
+                h2 {
+                    color: darkblue;
+                }
+            </style>
+        </head>
+        <body style="background: white">
+            <h2>Welcome to the Iframe</h2>
+            <p>This HTML content is loaded directly within the iframe.</p>
+            <button onclick='alert(\"Button inside iframe clicked!\")'>Click Me!</button>
+        </body>
+        </html>
+    `
     const outputArea = OutputArea()
     const editor = new TextEditor({
         initialText: coreContent,
@@ -31,10 +56,12 @@ export function JsCell({cellId, coreContent, style, stateManager, createNewCell 
     })
     editor.style.borderRadius = "1rem"
     editor.style.overflow = "hidden"
-    const onRun = makeOnRunJs({editor, outputArea, stateManager, cellId})
+    console.log(`makeing onRun`)
+    const onRun = makeOnRunJs({editor, outputArea, iframe, stateManager, cellId})
     element.append(
         editor,
         outputArea,
+        iframe,
         CellManagementButtons({
             cellId,
             stateManager,
@@ -47,28 +74,43 @@ export function JsCell({cellId, coreContent, style, stateManager, createNewCell 
     return element
 }
 
-const makeOnRunJs = ({editor, outputArea, stateManager, cellId}) => async () => {
-    removeAllChildElements(outputArea)
-    console.log(`running cell ${cellId}`)
-    const { runtimeError, syntaxError } = await stateManager.runCode(editor.code, {outputElement: outputArea})
-    if (runtimeError) {
-        outputArea.append(
-            html`<Column style="color:var(--theme-red);">
-                runtimeError: ${runtimeError?.message}<br><br>
-                <div padding-left=1em>
-                    ${formatError(runtimeError)}
-                </div>
-            </Column>`
-        )
-    } else if (syntaxError) {
-        outputArea.append(
-            html`<Column style="color:var(--theme-red);">
-                syntaxError: ${syntaxError?.message}<br><br>
-                <div padding-left=1em>
-                    ${formatError(syntaxError)}
-                </div>
-            </Column>`
-        )
+const makeOnRunJs = ({editor, outputArea, iframe, stateManager, cellId}) => {
+    if (iframe) {
+        globalThis.iframe = iframe
+    }
+    console.debug(`iframe is:`,iframe)
+    // console.debug(`iframe.contentWindow.document is:`,iframe.contentWindow.document)
+    return async () => {
+        removeAllChildElements(outputArea)
+        console.log(`running cell ${cellId}`)
+        if (iframe) {
+            globalThis.iframe = iframe
+        }
+        // wait for the iframe to load if it hasn't already
+        while (!iframe.contentWindow) {
+            await new Promise(r=>setTimeout(r,100)) // TODO: make this 100ms configurable somehow
+        }
+        console.log(`got iframe contentWindow`)
+        const { runtimeError, syntaxError } = await stateManager.runCode(editor.code, {outputElement: outputArea, document: iframe.contentWindow.document})
+        if (runtimeError) {
+            outputArea.append(
+                html`<Column style="color:var(--theme-red);">
+                    runtimeError: ${runtimeError?.message}<br><br>
+                    <div padding-left=1em>
+                        ${formatError(runtimeError)}
+                    </div>
+                </Column>`
+            )
+        } else if (syntaxError) {
+            outputArea.append(
+                html`<Column style="color:var(--theme-red);">
+                    syntaxError: ${syntaxError?.message}<br><br>
+                    <div padding-left=1em>
+                        ${formatError(syntaxError)}
+                    </div>
+                </Column>`
+            )
+        }
     }
 }
 

@@ -2,7 +2,7 @@
 import { Elemental, passAlongProps } from "./imports/elemental.js"
 import { css, components, Column, Row, askForFiles, Code, Input, Button, Checkbox, Dropdown, popUp, cx, } from "./imports/good_component.js"
 import { fadeIn, fadeOut } from "./imports/good_component.js"
-import { showToast } from "./imports/good_component.js"
+// import { showToast } from "./imports/good_component.js"
 import { removeAllChildElements } from "./imports/good_component.js"
 import { focusOn } from './tools/browser_help.js'
 
@@ -62,6 +62,7 @@ import { FileSystemPanel } from "./components/file_system_panel.js"
     document.head.append(themeStyleElement)
     document.body = html`
         <body
+            min-height=100vh
             font-size=15px
             background-color=var(--theme-secondary-background)
             color=var(--theme-secondary-foreground)

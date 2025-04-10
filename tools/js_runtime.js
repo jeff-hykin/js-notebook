@@ -65,6 +65,22 @@ const enableDocumentShimWarnings = true
 let documentShimMapping = {}
 if (typeof document != "undefined") {
     documentShimMapping = globalThis[Symbol.for('documentShimMapping')]
+    const getTrace = ()=>{
+        const prevLimit = Error?.stackTraceLimit
+        try {
+            Error.stackTraceLimit = Infinity
+        } catch (error) {
+            
+        }
+        const stack = [new Error().stack]
+        // .split(/\n\s*/g).slice(3).map(each=>each.replace(/^at /,"")).filter(each=>each.length)
+        if (prevLimit!=null) {
+            Error.stackTraceLimit = prevLimit
+        } else {
+            delete Error.stackTraceLimit
+        }
+        return stack
+    }
     if (!documentShimMapping) {
         documentShimMapping = globalThis[Symbol.for('documentShimMapping')] = {
             // [cellId]: {
@@ -85,7 +101,7 @@ if (typeof document != "undefined") {
                 if (get) {
                     const realGet = get
                     get = (...args)=>{
-                        const stack = new Error().stack.split(/\n\s*/g).slice(2).map(each=>each.replace(/^at /,"")).filter(each=>each.length)
+                        const stack = getTrace()
                         for (const [cellId, {checker,document}] of Object.entries(documentShimMapping)) {
                             if (typeof checker == "function" && checker(stack)) {
                                 return realGet.apply(document, args)
@@ -97,7 +113,7 @@ if (typeof document != "undefined") {
                 if (set) {
                     const realSet = set
                     set = (...args)=>{
-                        const stack = new Error().stack.split(/\n\s*/g).slice(2).map(each=>each.replace(/^at /,"")).filter(each=>each.length)
+                        const stack = getTrace()
                         for (const [cellId, {checker,document}] of Object.entries(documentShimMapping)) {
                             if (typeof checker == "function" && checker(stack)) {
                                 return realSet.apply(document, args)
@@ -121,10 +137,13 @@ if (typeof document != "undefined") {
                 if (typeof value == "function") {
                     const realMethod = value
                     value = (...args)=>{
-                        const stack = new Error().stack.split(/\n\s*/g).slice(2).map(each=>each.replace(/^at /,"")).filter(each=>each.length)
+                        const stack = getTrace()
+                        console.debug(`stack is:`,stack.join("\n"))
+                        console.debug(`value is:`,value)
+                        console.debug(`realMethod is:`,realMethod)
                         for (const [cellId, {checker,document}] of Object.entries(documentShimMapping)) {
                             if (typeof checker == "function" && checker(stack)) {
-                                return realMethod.apply(document, args)
+                                return document[key](...args)
                             }
                         }
                         return realMethod.apply(document, args)
@@ -149,7 +168,7 @@ if (typeof document != "undefined") {
                         let set
                         if (writable) {
                             set = (newValue)=>{
-                                const stack = new Error().stack.split(/\n\s*/g).slice(2).map(each=>each.replace(/^at /,"")).filter(each=>each.length)
+                                const stack = getTrace()
                                 for (const [cellId, {checker,document}] of Object.entries(documentShimMapping)) {
                                     if (typeof checker == "function" && checker(stack)) {
                                         return document[key] = newValue
@@ -161,7 +180,7 @@ if (typeof document != "undefined") {
                         }
                         Object.defineProperty(document, key, {
                             get: ()=>{
-                                const stack = new Error().stack.split(/\n\s*/g).slice(2).map(each=>each.replace(/^at /,"")).filter(each=>each.length)
+                                const stack = getTrace()
                                 for (const [cellId, {checker,document}] of Object.entries(documentShimMapping)) {
                                     if (typeof checker == "function" && checker(stack)) {
                                         return document[key]
@@ -236,7 +255,14 @@ export const runCode = async ({ code, runtime, outputElement, document }) => {
             )
         )
     ].filter(isValidIdentifier)
-    let newCode = `({${variableNames.join(", ")}})=>((async function() {"use strict"; ${code}
+    const stackId = "cell" + `${Math.random()}`.slice(2)
+    console.debug(`stackId is:`,stackId)
+    console.debug(`document is:`,document)
+    documentShimMapping[stackId] = {
+        checker: (stack)=>stack.join("").includes(stackId), // FIXME: clean up
+        document: document,
+    }
+    let newCode = `({${variableNames.join(", ")}})=>((async function ${stackId}() {"use strict"; ${code}
         ;})())`
     // console.debug(`code is:`,newCode)
     let cellAsFunction

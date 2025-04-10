@@ -299,11 +299,11 @@ export class StateManager {
     // 
     // runtime
     // 
-    runCode(code, {outputElement}) {
+    runCode(code, {...args}) {
         return runCode({
             code,
             runtime: this.runtime,
-            outputElement,
+            ...args,
         })
     }
 }
