@@ -2,7 +2,7 @@
 import { Elemental, passAlongProps } from "./imports/elemental.js"
 import { css, components, Column, Row, askForFiles, Code, Input, Button, Checkbox, Dropdown, popUp, cx, } from "./imports/good_component.js"
 import { fadeIn, fadeOut } from "./imports/good_component.js"
-import { showToast } from "./imports/good_component.js"
+// import { showToast } from "./imports/good_component.js"
 import { removeAllChildElements } from "./imports/good_component.js"
 import { focusOn } from './tools/browser_help.js'
 
@@ -12,11 +12,13 @@ import { StateManager } from './systems/state_manager.js'
 
 import { Cell } from "./components/cell.js"
 import { dump, load } from "./imports/js_yaml.js"
+import { FileSystemPanel } from "./components/file_system_panel.js"
 
 // TODO:
+    // file system panel
     // download-upload iframe output
     // html download
-    // file system panel
+        // have it embed the yaml into a template
     // LATER:
         // connect theme hooks
         // connect config hooks
@@ -31,7 +33,12 @@ import { dump, load } from "./imports/js_yaml.js"
         jsonCellSystem: {
             config: {},
             theme: {},
-            fileSystemData: {},
+            fileSystemData: {
+                "testFile.txt": {
+                    directory: false,
+                    content: "hello world",
+                },
+            },
             // cells: [
             //     {
             //         cellId: Math.random(),
@@ -55,6 +62,7 @@ import { dump, load } from "./imports/js_yaml.js"
     document.head.append(themeStyleElement)
     document.body = html`
         <body
+            min-height=100vh
             font-size=15px
             background-color=var(--theme-secondary-background)
             color=var(--theme-secondary-foreground)
@@ -64,6 +72,7 @@ import { dump, load } from "./imports/js_yaml.js"
             margin=0
             >
                 ${cellContainer}
+                ${FileSystemPanel({ stateManager, connectOnReceiveChange: ()=>{}, onPushChange: ()=>{} })}
                 <Button
                     name="YamlDownloadButton"
                     style="position:fixed;top:1rem;right:1rem;z-index:10;border-radius:1em;box-shadow:0 4px 5px 0 rgba(0,0,0,0.14), 0 1px 10px 0 rgba(0,0,0,0.12), 0 2px 4px -1px rgba(0,0,0,0.3); cursor:pointer;" 
