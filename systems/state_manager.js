@@ -73,8 +73,10 @@ export class StateManager {
         let { config, theme, cells, fileSystemData, } = structuredClone(jsonCellSystem||{})
         this._config = config || {}
         this._theme = {...theme,...defaultTheme}
-        this._fileSystemData = fileSystemData || {}
-        
+        this._fileSystemData = {}
+        for (const [key, value] of Object.entries(fileSystemData||{})) {
+            this._fileSystemData[normalizePath(key)] = value
+        }
 
         this._initStackFrame = new Error().stack.split("\n").slice(2).join("\n").trim()
         this.runtime = makeRuntime()
@@ -85,10 +87,10 @@ export class StateManager {
         this.loadStateCallbacks = new Set([...loadStateCallbacks])
         this.stateChangeCallbacks = new Set([...stateChangeCallbacks])
         this.fileSystemEvents = {
-            get: new Event(),
-            write: new Event(),
-            rename: new Event(),
-            remove: new Event(),
+            beforeGet: new Event(),
+            beforeWrite: new Event(),
+            beforeRename: new Event(),
+            beforeRemove: new Event(),
             // TODO: event on new directory, detect new directory based on file paths
             // TODO: check if there are conflicting paths ("/a/b" is file and "/a/" is file)
         }
@@ -138,6 +140,8 @@ export class StateManager {
                     throw new TypeError(`When calling fileSystem.rename, path must be a string\nEx: fileSystem.rename({path:"/path/to/file", path:"/new/path"})`)
                 }
                 path = normalizePath(path)
+                console.log(`triggering remove`, path)
+                trigger(this.fileSystemEvents.remove, {path,})
                 return delete this._fileSystemData[path]
             },
         }

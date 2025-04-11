@@ -2,10 +2,8 @@ import { Elemental, passAlongProps } from "../imports/elemental.js"
 import { css, components, Column, Row, askForFiles, Code, Input, Button, Checkbox, Dropdown, popUp, cx, } from "../imports/good_component.js"
 import { addDynamicStyleFlags, setupStyles, createCssClass, setupClassStyles, hoverStyleHelper, combineClasses, mergeStyles, AfterSilent, removeAllChildElements } from "../imports/good_component.js"
 
-import CM from 'https://esm.sh/gh/jeff-hykin/codemirror_esm@0.0.2.2/main.js'
-const { javascript } = CM["@codemirror/lang-javascript"]
+// import CM from 'https://esm.sh/gh/jeff-hykin/codemirror_esm@0.0.2.2/main.js'
 
-import { convertImports } from "../tools/parsing.js"
 import { OutputArea } from "./output_area.js"
 import { TextEditor } from "./text_editor.js"
 import { CellManagementButtons } from "./cell_management_buttons.js"
@@ -16,17 +14,9 @@ const { html } = Elemental({
     Column,
 })
 
-const jsResponse = {}
-window.addEventListener("message", (event) => {
-    if (event.data.cellId) {
-        jsResponse[event.data.cellId](event.data)
-    }
-})
-export function JsCell({cellId, coreContent, style, stateManager, createNewCell }={}) {
+export function FileCell({cellId, coreContent, style, stateManager, createNewCell }={}) {
     const element = BaseCell({cellId})
     const iframe = document.createElement("iframe")
-    iframe.style.width = "100%"
-    iframe.style.height = "20rem"
     iframe.srcdoc = `
         <!DOCTYPE html>
         <html lang='en'>
@@ -34,57 +24,36 @@ export function JsCell({cellId, coreContent, style, stateManager, createNewCell 
             <meta charset='UTF-8'>
             <meta name='viewport' content='width=device-width, initial-scale=1.0'>
             <title>Iframe Content</title>
+            <style>
+                body {
+                    background-color: lightyellow;
+                    font-family: Arial, sans-serif;
+                }
+                h2 {
+                    color: darkblue;
+                }
+            </style>
         </head>
-        <body style="background: gray;">
+        <body style="background: white">
+            <h2>Welcome to the Iframe</h2>
+            <p>This HTML content is loaded directly within the iframe.</p>
+            <button onclick='alert(\"Button inside iframe clicked!\")'>Click Me!</button>
         </body>
-        <script type="module">
-            let prevPromise = null
-            const respond = (code)=>{
-                let evalResult
-                try {
-                    evalResult = eval?.(code)
-                // sync error
-                } catch (error) {
-                    window.parent.postMessage({ cellId: ${JSON.stringify(cellId)}, error, errorStack: error?.stack})
-                }
-                if (evalResult instanceof Promise) {
-                    prevPromise = evalResult.catch(error=>{
-                        window.parent.postMessage({ cellId: ${JSON.stringify(cellId)}, error, errorStack: error?.stack})
-                    })
-                }
-            }
-            window.addEventListener("message", (event)=>{
-                if (prevPromise) {
-                    prevPromise.finally(respond)
-                    prevPromise = null
-                } else {
-                    respond(event.data)
-                }
-            })
-        </script>
         </html>
     `
-    // FIXME: memory leak
-    // FIXME: these errors will pretty much just be from loading the 
-    jsResponse[cellId] = (data)=>{
-        if (data.error) {
-            console.error(`error in cell ${cellId}`, data.error)
-        }
-    }
     const outputArea = OutputArea()
     const editor = new TextEditor({
         initialText: coreContent,
         width: "100%",
         onRun: () => onRun(),
-        language: javascript(),
+        // language: javascript(),
         themeObject: stateManager.getCodeMirrorTheme(),
         onChange: () => {
             stateManager.getCellFromId(cellId).coreContent = editor.code
             stateManager._activeStateWasUpdated() // FIXME: redo this interface
         },
     })
-    editor.style.borderRadius = "1rem" // FIXME: this should come from theme AND this needs to coordinate with the markdown editor
-    iframe.style.borderRadius = "1rem"
+    editor.style.borderRadius = "1rem"
     editor.style.overflow = "hidden"
     console.log(`makeing onRun`)
     const onRun = makeOnRunJs({editor, outputArea, iframe, stateManager, cellId})
@@ -108,22 +77,20 @@ const makeOnRunJs = ({editor, outputArea, iframe, stateManager, cellId}) => {
     if (iframe) {
         globalThis.iframe = iframe
     }
+    console.debug(`iframe is:`,iframe)
     // console.debug(`iframe.contentWindow.document is:`,iframe.contentWindow.document)
     return async () => {
         removeAllChildElements(outputArea)
+        console.log(`running cell ${cellId}`)
         if (iframe) {
             globalThis.iframe = iframe
         }
         // wait for the iframe to load if it hasn't already
-        while (!iframe.contentWindow.document) {
+        while (!iframe.contentWindow) {
             await new Promise(r=>setTimeout(r,100)) // TODO: make this 100ms configurable somehow
         }
-        removeAllChildElements(iframe.contentWindow.document.body)
-        const code = editor.code
-        const { code: convertedCode, importSources } = convertImports(code)
-        const asyncImportStatements = importSources.map(each=>`console.log("importing", ${each});await import(${each})`).join(";")
-        iframe.contentWindow.postMessage(`((async ()=>{${asyncImportStatements}})())`)
-        const { runtimeError, syntaxError } = await stateManager.runCode(code, {outputElement: outputArea, document: iframe.contentWindow.document, convertedCode: {code:convertedCode}})
+        console.log(`got iframe contentWindow`)
+        const { runtimeError, syntaxError } = await stateManager.runCode(editor.code, {outputElement: outputArea, document: iframe.contentWindow.document})
         if (runtimeError) {
             outputArea.append(
                 html`<Column style="color:var(--theme-red);">

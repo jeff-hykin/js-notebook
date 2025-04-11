@@ -72,7 +72,7 @@ import { FileSystemPanel } from "./components/file_system_panel.js"
             margin=0
             >
                 ${cellContainer}
-                ${FileSystemPanel({ stateManager, connectOnReceiveChange: ()=>{}, onPushChange: ()=>{} })}
+                ${FileSystemPanel({ stateManager, connectOnReceiveChange: ()=>{}, onPushChange: ()=>{}, style:"position:fixed; bottom:2rem;" })}
                 <Button
                     name="YamlDownloadButton"
                     style="position:fixed;top:1rem;right:1rem;z-index:10;border-radius:1em;box-shadow:0 4px 5px 0 rgba(0,0,0,0.14), 0 1px 10px 0 rgba(0,0,0,0.12), 0 2px 4px -1px rgba(0,0,0,0.3); cursor:pointer;" 
