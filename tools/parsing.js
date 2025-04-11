@@ -29,10 +29,10 @@ const parser = await parserFromWasm(javascript) // path or Uint8Array
  * //     var a = await require("bar/normal")
  * ```
  *
- * @param arg1 - description
- * @param arg1.parameter - description
- * @returns {Object} output - description
- * @returns output.x - description
+ * @param code - string
+ * @returns {Object} output - 
+ * @returns output.code - 
+ * @returns output.importSources - 
  *
  */
 export function convertImports(code) {
@@ -56,6 +56,7 @@ export function convertImports(code) {
     ]
     
     const nodes = handledStatements.sort((a,b)=>(a.statement||a.funcCallName).startIndex-(b.statement||b.funcCallName).startIndex)
+    let importSources = []
     const codeChunks = []
     let previousIndex = 0
     for (let { funcCallName, importPath, importType, statement } of nodes) {
@@ -84,6 +85,8 @@ export function convertImports(code) {
                 )
             } else {
                 const importClause = statement.children.find(each=>each.type === "import_clause")
+                const importSourceNode = statement.children.find(each=>each.type === "string")
+                importSources.push(importSourceNode?.text)
                 let output = "var "
                 for (let each of importClause.children) {
                     if (each.type === "ERROR") {
@@ -110,7 +113,7 @@ export function convertImports(code) {
                         //     </string>
                         // </import_statement>
                         // TODO: might need to be equal to default, unclear
-                        output += ` ${each.text} = `
+                        output += `{ default: ${each.text} } = `
                     } else if (each.type === "namespace_import") {
                         // statement is: <import_statement>
                         //     <import text="import" />
@@ -192,6 +195,6 @@ export function convertImports(code) {
     ]) {
         stuffToExport.push(each.varName.text)
     }
-
-    return output + `;return {${stuffToExport.join(",")}}`
+    importSources = importSources.filter(each=>each)
+    return { code: output + `;return {${stuffToExport.join(",")}}`, importSources}
 }

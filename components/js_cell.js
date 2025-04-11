@@ -5,6 +5,7 @@ import { addDynamicStyleFlags, setupStyles, createCssClass, setupClassStyles, ho
 import CM from 'https://esm.sh/gh/jeff-hykin/codemirror_esm@0.0.2.2/main.js'
 const { javascript } = CM["@codemirror/lang-javascript"]
 
+import { convertImports } from "../tools/parsing.js"
 import { OutputArea } from "./output_area.js"
 import { TextEditor } from "./text_editor.js"
 import { CellManagementButtons } from "./cell_management_buttons.js"
@@ -15,9 +16,17 @@ const { html } = Elemental({
     Column,
 })
 
+const jsResponse = {}
+window.addEventListener("message", (event) => {
+    if (event.data.cellId) {
+        jsResponse[event.data.cellId](event.data)
+    }
+})
 export function JsCell({cellId, coreContent, style, stateManager, createNewCell }={}) {
     const element = BaseCell({cellId})
     const iframe = document.createElement("iframe")
+    iframe.style.width = "100%"
+    iframe.style.height = "20rem"
     iframe.srcdoc = `
         <!DOCTYPE html>
         <html lang='en'>
@@ -25,23 +34,43 @@ export function JsCell({cellId, coreContent, style, stateManager, createNewCell 
             <meta charset='UTF-8'>
             <meta name='viewport' content='width=device-width, initial-scale=1.0'>
             <title>Iframe Content</title>
-            <style>
-                body {
-                    background-color: lightyellow;
-                    font-family: Arial, sans-serif;
-                }
-                h2 {
-                    color: darkblue;
-                }
-            </style>
         </head>
-        <body style="background: white">
-            <h2>Welcome to the Iframe</h2>
-            <p>This HTML content is loaded directly within the iframe.</p>
-            <button onclick='alert(\"Button inside iframe clicked!\")'>Click Me!</button>
+        <body style="background: gray;">
         </body>
+        <script type="module">
+            let prevPromise = null
+            const respond = (code)=>{
+                let evalResult
+                try {
+                    evalResult = eval?.(code)
+                // sync error
+                } catch (error) {
+                    window.parent.postMessage({ cellId: ${JSON.stringify(cellId)}, error, errorStack: error?.stack})
+                }
+                if (evalResult instanceof Promise) {
+                    prevPromise = evalResult.catch(error=>{
+                        window.parent.postMessage({ cellId: ${JSON.stringify(cellId)}, error, errorStack: error?.stack})
+                    })
+                }
+            }
+            window.addEventListener("message", (event)=>{
+                if (prevPromise) {
+                    prevPromise.finally(respond)
+                    prevPromise = null
+                } else {
+                    respond(event.data)
+                }
+            })
+        </script>
         </html>
     `
+    // FIXME: memory leak
+    // FIXME: these errors will pretty much just be from loading the 
+    jsResponse[cellId] = (data)=>{
+        if (data.error) {
+            console.error(`error in cell ${cellId}`, data.error)
+        }
+    }
     const outputArea = OutputArea()
     const editor = new TextEditor({
         initialText: coreContent,
@@ -78,20 +107,22 @@ const makeOnRunJs = ({editor, outputArea, iframe, stateManager, cellId}) => {
     if (iframe) {
         globalThis.iframe = iframe
     }
-    console.debug(`iframe is:`,iframe)
     // console.debug(`iframe.contentWindow.document is:`,iframe.contentWindow.document)
     return async () => {
         removeAllChildElements(outputArea)
-        console.log(`running cell ${cellId}`)
         if (iframe) {
             globalThis.iframe = iframe
         }
         // wait for the iframe to load if it hasn't already
-        while (!iframe.contentWindow) {
+        while (!iframe.contentWindow.document) {
             await new Promise(r=>setTimeout(r,100)) // TODO: make this 100ms configurable somehow
         }
-        console.log(`got iframe contentWindow`)
-        const { runtimeError, syntaxError } = await stateManager.runCode(editor.code, {outputElement: outputArea, document: iframe.contentWindow.document})
+        removeAllChildElements(iframe.contentWindow.document.body)
+        const code = editor.code
+        const { code: convertedCode, importSources } = convertImports(code)
+        const asyncImportStatements = importSources.map(each=>`console.log("importing", ${each});await import(${each})`).join(";")
+        iframe.contentWindow.postMessage(`((async ()=>{${asyncImportStatements}})())`)
+        const { runtimeError, syntaxError } = await stateManager.runCode(code, {outputElement: outputArea, document: iframe.contentWindow.document, convertedCode: {code:convertedCode}})
         if (runtimeError) {
             outputArea.append(
                 html`<Column style="color:var(--theme-red);">

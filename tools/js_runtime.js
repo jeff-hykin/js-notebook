@@ -11,7 +11,7 @@ const elementLogger = (element, tag, ...args)=>{
         if (typeof each == "string") {
             return each
         } else {
-            return toRepresentation(each)
+            return toRepresentation(each, { debug: true })
         }
     }).join(" ")
     element.append(el)
@@ -63,7 +63,8 @@ const consoleElement = {
 // enable remapping of document based on the caller (each runtime can get a different document)
 const enableDocumentShimWarnings = true
 let documentShimMapping = {}
-if (typeof document != "undefined") {
+// TODO: decide iframe thing later
+if (true && typeof document != "undefined") {
     documentShimMapping = globalThis[Symbol.for('documentShimMapping')]
     const getTrace = ()=>{
         const prevLimit = Error?.stackTraceLimit
@@ -138,9 +139,9 @@ if (typeof document != "undefined") {
                     const realMethod = value
                     value = (...args)=>{
                         const stack = getTrace()
-                        console.debug(`stack is:`,stack.join("\n"))
-                        console.debug(`value is:`,value)
-                        console.debug(`realMethod is:`,realMethod)
+                        // console.debug(`stack is:`,stack.join("\n"))
+                        // console.debug(`value is:`,value)
+                        // console.debug(`realMethod is:`,realMethod)
                         for (const [cellId, {checker,document}] of Object.entries(documentShimMapping)) {
                             if (typeof checker == "function" && checker(stack)) {
                                 return document[key](...args)
@@ -239,8 +240,8 @@ export const makeRuntime = ({ randomSeed, }={}) => {
  * console.log("final runtime is:", runtime)
  * ```
  */
-export const runCode = async ({ code, runtime, outputElement, document }) => {
-    code = convertImports(code)
+export const runCode = async ({ code, convertedCode, runtime, outputElement, document }) => {
+    var {code} = convertedCode || convertImports(code)
     // global overrides
     runtime.globalThis = runtime.globalThis || runtime
     runtime.$out = outputElement // TODO: remove this before release
