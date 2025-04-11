@@ -109,7 +109,7 @@ export class StateManager {
                     throw new TypeError(`When calling fileSystem.rename, path must be a string\nEx: fileSystem.rename({path:"/path/to/file", path:"/new/path"})`)
                 }
                 path = normalizePath(path)
-                trigger(this.fileSystemEvents.get, {path,})
+                trigger(this.fileSystemEvents.beforeGet, {path,})
                 if (this._fileSystemData[path]) {
                     return Object.freeze({...this._fileSystemData[path]})
                 }
@@ -119,7 +119,7 @@ export class StateManager {
                     throw new TypeError(`When calling fileSystem.rename, path must be a string\nEx: fileSystem.rename({path:"/path/to/file", path:"/new/path"})`)
                 }
                 path = normalizePath(path)
-                trigger(this.fileSystemEvents.write, {path, content, ...other})
+                trigger(this.fileSystemEvents.beforeWrite, {path, content, ...other})
                 this._fileSystemData[path] = {content, ...other}
             },
             rename: ({path, newPath,})=>{
@@ -131,7 +131,7 @@ export class StateManager {
                 }
                 path = normalizePath(path)
                 newPath = normalizePath(newPath)
-                trigger(this.fileSystemEvents.rename, {path, newPath})
+                trigger(this.fileSystemEvents.beforeRename, {path, newPath})
                 this._fileSystemData[newPath] = this._fileSystemData[path]
                 delete this._fileSystemData[path]
             },
@@ -140,7 +140,7 @@ export class StateManager {
                     throw new TypeError(`When calling fileSystem.rename, path must be a string\nEx: fileSystem.rename({path:"/path/to/file", path:"/new/path"})`)
                 }
                 path = normalizePath(path)
-                trigger(this.fileSystemEvents.remove, {path,})
+                trigger(this.fileSystemEvents.beforeRemove, {path,})
                 return delete this._fileSystemData[path]
             },
         }
