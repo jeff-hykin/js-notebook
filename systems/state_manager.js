@@ -140,7 +140,6 @@ export class StateManager {
                     throw new TypeError(`When calling fileSystem.rename, path must be a string\nEx: fileSystem.rename({path:"/path/to/file", path:"/new/path"})`)
                 }
                 path = normalizePath(path)
-                console.log(`triggering remove`, path)
                 trigger(this.fileSystemEvents.remove, {path,})
                 return delete this._fileSystemData[path]
             },
@@ -359,7 +358,10 @@ export class StateManager {
     // 
     // runtime
     // 
-    runCode(code, {...args}) {
+    runCode(code, { otherGlobals={}, ...args}) {
+        for (const [key, value] of Object.entries(otherGlobals)) {
+            this.runtime[key] = value
+        }
         return runCode({
             code,
             runtime: this.runtime,

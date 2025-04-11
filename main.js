@@ -38,6 +38,10 @@ import { FileSystemPanel } from "./components/file_system_panel.js"
                     directory: false,
                     content: "hello world",
                 },
+                "testFile2.txt": {
+                    directory: false,
+                    content: new TextEncoder().encode("hello world"),
+                },
             },
             // cells: [
             //     {

@@ -123,7 +123,16 @@ const makeOnRunJs = ({editor, outputArea, iframe, stateManager, cellId}) => {
         const { code: convertedCode, importSources } = convertImports(code)
         const asyncImportStatements = importSources.map(each=>`console.log("importing", ${each});await import(${each})`).join(";")
         iframe.contentWindow.postMessage(`((async ()=>{${asyncImportStatements}})())`)
-        const { runtimeError, syntaxError } = await stateManager.runCode(code, {outputElement: outputArea, document: iframe.contentWindow.document, convertedCode: {code:convertedCode}})
+        const { runtimeError, syntaxError } = await stateManager.runCode(
+            code,
+            {
+                outputElement: outputArea,
+                document: iframe.contentWindow.document,
+                convertedCode: {code:convertedCode},
+                otherGlobals: {
+                    fs: stateManager.fileSystem,
+                },
+            })
         if (runtimeError) {
             outputArea.append(
                 html`<Column style="color:var(--theme-red);">

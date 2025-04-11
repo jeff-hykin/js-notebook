@@ -24,8 +24,8 @@ const { html } = Elemental({
 
 export function FileSystemPanel({ connectOnReceiveChange, onPushChange, stateManager, style }={}) {
     const pathToElement = {}
-    const element = html`<Column
-        display=block
+    const element = html`<div
+        display=grid
         width=min(20rem,85vw)
         visibility=visible
         padding=2rem
@@ -35,13 +35,11 @@ export function FileSystemPanel({ connectOnReceiveChange, onPushChange, stateMan
         box-shadow="0 4px 5px 0 rgba(0,0,0,0.14), 0 1px 10px 0 rgba(0,0,0,0.12), 0 2px 4px -1px rgba(0,0,0,0.3)"
         max-height=20rem
         overflow=auto
+        gap=0.5rem
         >
-    </Column>`
+    </div>`
     const updateFilePaths = ()=>{
-        console.log(`updating file paths`)
         removeAllChildElements(element)
-        const data = stateManager.fileSystem.getAllMetadata()
-        console.debug(`data is:`,data)
         // for now just regenerate all, later do precise updates
         for (const [path, data] of Object.entries(stateManager.fileSystem.getAllMetadata())) {
             const newElement = html`<Row verticalAlignment=center gap=1rem horizontalAlignment=space-between>
@@ -50,7 +48,7 @@ export function FileSystemPanel({ connectOnReceiveChange, onPushChange, stateMan
                 <BasicButton class=fileRemoveButton background-color=var(--theme-red) onClick=${()=>{
                     console.log(`removing`, path)
                     stateManager.fileSystem.remove(path)
-                }}>
+                }} padding="0.3rem 0.5rem">
                     remove
                 </BasicButton>
             </Row>`

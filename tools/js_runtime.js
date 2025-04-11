@@ -6,12 +6,13 @@ import { allKeyDescriptions } from 'https://esm.sh/gh/jeff-hykin/good-js@1.15.0.
 const { console, Math, Date, setTimout, setInterval, clearTimeout, clearInterval, fetch, Uint8Array, Map, Set, URL, WebAssembly, Array, Number, Symbol, Promise, RegExp, Error, document } = globalThis
 const elementLogger = (element, tag, ...args)=>{
     const el = document.createElement("p")
+    el.style.whiteSpace = "pre"
     el.classList.add(`console-${tag}`)
     el.innerText = args.map((each)=>{
         if (typeof each == "string") {
             return each
         } else {
-            return toRepresentation(each, { debug: true })
+            return toRepresentation(each)
         }
     }).join(" ")
     element.append(el)
@@ -257,8 +258,6 @@ export const runCode = async ({ code, convertedCode, runtime, outputElement, doc
         )
     ].filter(isValidIdentifier)
     const stackId = "cell" + `${Math.random()}`.slice(2)
-    console.debug(`stackId is:`,stackId)
-    console.debug(`document is:`,document)
     documentShimMapping[stackId] = {
         checker: (stack)=>stack.join("").includes(stackId), // FIXME: clean up
         document: document,
