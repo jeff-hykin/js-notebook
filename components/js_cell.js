@@ -130,7 +130,7 @@ const makeOnRunJs = ({editor, outputArea, iframe, stateManager, cellId}) => {
                 document: iframe.contentWindow.document,
                 convertedCode: {code:convertedCode},
                 otherGlobals: {
-                    fs: stateManager.fileSystem,
+                    $fs: stateManager.fileSystem,
                 },
             })
         if (runtimeError) {
