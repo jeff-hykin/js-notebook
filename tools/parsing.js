@@ -35,7 +35,7 @@ const parser = await parserFromWasm(javascript) // path or Uint8Array
  * @returns output.importSources - 
  *
  */
-export function convertImports(code) {
+export function convertImports(code, {returnTopLevelAsObject=false}={}) {
     let stuffToExport = []
     const root = parser.parse(code).rootNode
     const maxResultDepth = 5 // NOTE: this not as limiting as it seems: we only need to find top-level require statements, all the others will be handled by a different query
@@ -184,8 +184,14 @@ export function convertImports(code) {
     codeChunks.push(
         code.slice(previousIndex, code.length)
     )
-
+    
+    const syntaxErrors = root.quickQuery(`(ERROR)`)||[]
     const output = codeChunks.join("")
+    importSources = importSources.filter(each=>each)
+    if (!returnTopLevelAsObject) {
+        return {code:output, importSources, syntaxErrors, }
+    }
+
     const newRoot = parser.parse(output).rootNode
     // what to export
     for (let each of [
@@ -195,6 +201,5 @@ export function convertImports(code) {
     ]) {
         stuffToExport.push(each.varName.text)
     }
-    importSources = importSources.filter(each=>each)
-    return { code: output + `;return {${stuffToExport.join(",")}}`, importSources}
+    return { code: output + `;return {${stuffToExport.join(",")}}`, importSources, syntaxErrors, }
 }
