@@ -1,17 +1,53 @@
-// import * as danfo from './tools/danfo.js'
-// import * as danfo from 'https://esm.sh/danfojs@1.1.2/dist/danfojs-browser/src/index.js?dev'
-    // as part of danfojs, we could reuse these to minimize import size:
-        // xlsx@0.17.2/esnext/xlsx.development.mjs
-        // plotly.js-dist-min@2.8.0/esnext/plotly.js-dist-min.development.mjs
-        // tensorflow/tfjs-core@3.21.0/esnext/dist/base_side_effects.development.js
-        // fullwidth-code-point@3.0.0/esnext/is-fullwidth-code-point.development.mjsment.js
-        // tensorflow/tfjs-backend-cpu@3.21.0/esnext/dist/base.development.js
-        // tensorflow/tfjs-backend-webgl@3.21.0/esnext/dist/kernels/AddN.development.js
-        // tensorflow/tfjs-core@3.21.0/esnext/dist/ops/image/non_max_suppression.development.js
-        // tensorflow/tfjs-backend-webgl@3.21.0/esnext/dist/kernel_utils/reduce.development.js
-// window.danfo = danfo
-// https://github.com/nhn/tui.editor
-// import 'https://esm.sh/@toast-ui/editor/dist/toastui-editor.css'
+Summary:
+    - There's a StateManager
+        - it can run on the backend (no direct connection to the UI)
+        - it doesn't use any globals (multiple instances can be created)
+        - the state of the whole notebook always equivalent to a yaml object (theme, cells, etc)
+        - it has tools for adding/removing/running cells
+    - The current major problems:
+        - How to serialize rended output cells:
+            - Every output cell is an iframe
+            - Saving to HTML using outerHTML might fix this problem
+            - Saving to YAML however:
+                - When a cell renders output, it potentially effects the CSS of the output iframe. When serializing the state, the styles elements, etc of that iframe need to be preserved. Even if they're preserved it will probably break interactivity since JS and other stuff is not setup. Maybe outerHTML of the iframe is the best option?
+                - Taking a screenshot of the iframe is semi-possible, but would loose interactivity
+        - When loading a state, should the theme be loaded as well? should we ask the user?
+            - Maybe let the export decide (no theme = keep existing theme active)
+        - The theme probably should be split into a syntax theme and a UI theme, maybe even be able to merge multiple themes
+    - The current minor problems:
+        - setting a variable in one cell doesn't mean its available in another cell
+        - importing "npm:" or "jsr:" should auto-resolve to an esm url
+
+
+
+- on download
+    - grab all the styles of iframes and their innerHTML `[...document.head.children].filter(each=>each.tagName=="STYLE")`
+    - include zip of files in the yaml
+
+- create a loader for yaml
+    - create an HTML download button that works for 
+
+- better file system
+    - file system on drop
+        - make a file system cell
+            - if text, show as text editor
+        - render possible options for manipulating the file
+            - read text
+            - csv parsing
+    - on hover show indicator that file can be dropped to be imported 
+    - clean up the state management of file system
+        - have a get-folders
+        - create event for add
+        - create tool for append (allow array representation of content)
+
+- figure out something for plotting
+
+- UI inputs
+    - connect them to a variable
+    - auto-re-run code when input changes
+
+- stage 2
+    - consider hooking up file system to duckdb or some other persistent storage
 
 // TODO:
     // DONE: get console.log to show up in $out

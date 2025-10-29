@@ -1,1 +1,0 @@
-export { dump, load } from "https://esm.sh/js-yaml@4.1.0/"

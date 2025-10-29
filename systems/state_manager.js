@@ -5,7 +5,6 @@ import { makeRuntime, runCode } from "../tools/js_runtime.js"
 import yaml from "../imports/yaml.js"
 import { toKebabCase } from "../imports/good_js.js"
 import { normalizePath } from "../imports/good_js.js"
-const yaml = { stringify: dump, parse: load }
 
 // NOTE: despite mentioning a theme, this whole file should be completely usable without a browser/DOM
 const defaultTheme = {
@@ -67,9 +66,11 @@ export class StateManager {
     constructor({
         jsonCellSystem,
         stateChangeCallbacks=[],
+        // TODO: mention/define if this onError is specifically for cell errors or for anything (e.g. loading) or only for fallback
         onError=(message, error, source,)=>console.error(message),
     }={}) {
-        let { config, theme, cells, fileSystemData, } = structuredClone(jsonCellSystem||{})
+        let { notebookName, config, theme, cells, fileSystemData, } = structuredClone(jsonCellSystem||{})
+        this.notebookName = notebookName
         this._config = config || {}
         this._theme = {...theme,...defaultTheme}
         this._fileSystemData = {}
@@ -229,6 +230,7 @@ export class StateManager {
     // 
     toYaml() {
         return yaml.stringify({
+            notebookName: this.notebookName,
             config: this._config,
             theme: this._theme,
             fileSystemData: this._fileSystemData,
@@ -340,7 +342,7 @@ export class StateManager {
 
 const makeRobustErrorHandler = ({ initStackFrame, stackFrame, source})=>{
     return (error)=>{
-        const errorMessage = `Error was caused in a callback after ${source}\n\nThe main object was initilized here:\n${this._initStackFrame}\n\nThe ${source} was called here:\n${stackFrame}\n\nThe error in the callback itself is:\n${error?.stack||error}`
+        const errorMessage = `Error was caused in a callback after ${source}\n\nThe main object was initialized here:\n${this._initStackFrame}\n\nThe ${source} was called here:\n${stackFrame}\n\nThe error in the callback itself is:\n${error?.stack||error}`
         safeCallErrorHandler(errorMessage, error, source, onError)
     }
 }

@@ -24,15 +24,6 @@ export function FileCell({cellId, coreContent, style, stateManager, createNewCel
             <meta charset='UTF-8'>
             <meta name='viewport' content='width=device-width, initial-scale=1.0'>
             <title>Iframe Content</title>
-            <style>
-                body {
-                    background-color: lightyellow;
-                    font-family: Arial, sans-serif;
-                }
-                h2 {
-                    color: darkblue;
-                }
-            </style>
         </head>
         <body style="background: white">
             <h2>Welcome to the Iframe</h2>

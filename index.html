@@ -458,12 +458,11 @@
             resize: vertical;
         }
         
-        /* this next rule breaks CodeMirror */
-        /* br {
-            display: block;
+        br {
+            display: inline-block; /* this is a deviation from normalize, but it breaks codemirror if kept as block */
             content: "";
             border-bottom: 0px solid transparent;
-        } */
+        }
         /* this rule helps fix e */
         
         .console-log {

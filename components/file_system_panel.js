@@ -22,7 +22,7 @@ const { html } = Elemental({
     // self-hiding panel (either hover or click)
 
 
-export function FileSystemPanel({ connectOnReceiveChange, onPushChange, stateManager, style }={}) {
+export function FileSystemPanel({ stateManager, style }={}) {
     const pathToElement = {}
     const element = html`<div
         display=grid
@@ -63,33 +63,6 @@ export function FileSystemPanel({ connectOnReceiveChange, onPushChange, stateMan
     everyTime(stateManager.fileSystemEvents.beforeRemove).then(delayedUpdate)
     everyTime(stateManager.fileSystemEvents.beforeWrite).then(delayedUpdate)
     updateFilePaths()
-    // // gets called when the file system changes
-    // const onFileSystemReceiveChange = (actions)=>{
-    //     for (const [path, action, data] of Object.entries(actions)) {
-    //         if (action == 'add') {
-    //             const newElement = html`<Row>
-    //                 <span class=path>${path}</span>
-    //                 <span class=type>(${data?.directory ? 'folder' : 'file'})</span>
-    //                 <BasicButton class=fileDeleteButton @click=${()=>{
-    //                     onPushChange('remove', path)
-    //                 }}>
-    //                     delete
-    //                 <BasicButton>
-    //             </Row>`
-    //             pathToElement[path] = newElement
-    //             element.append(newElement)
-    //         } else if (action == 'remove') {
-    //             const elementToRemove = pathToElement[path]
-    //             elementToRemove.remove()
-    //             delete pathToElement[path]
-    //         } else if (action == 'update') {
-    //             // nothing in panel
-    //         } else {
-    //             console.error('FileSystemPanel got Unknown action', action)
-    //         }
-    //     }
-    // }
-    // connectOnReceiveChange(onFileSystemReceiveChange)
     
     passAlongProps(element, {style})
     return element
