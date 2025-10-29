@@ -2,7 +2,7 @@ import { Event, trigger, everyTime, once } from "../imports/good_js.js"
 import { get, set, remove, merge } from "../imports/good_js.js"
 import { zipParse, zipCreate } from '../imports/good_js.js'
 import { makeRuntime, runCode } from "../tools/js_runtime.js"
-import { dump, load } from "../imports/js_yaml.js"
+import yaml from "../imports/yaml.js"
 import { toKebabCase } from "../imports/good_js.js"
 import { normalizePath } from "../imports/good_js.js"
 const yaml = { stringify: dump, parse: load }
@@ -66,7 +66,6 @@ const defaultTheme = {
 export class StateManager {
     constructor({
         jsonCellSystem,
-        loadStateCallbacks=[],
         stateChangeCallbacks=[],
         onError=(message, error, source,)=>console.error(message),
     }={}) {
@@ -84,7 +83,6 @@ export class StateManager {
             cells: cells||[],
         })
         this.prevState = structuredClone(this.activeState)
-        this.loadStateCallbacks = new Set([...loadStateCallbacks])
         this.stateChangeCallbacks = new Set([...stateChangeCallbacks])
         this.fileSystemEvents = {
             beforeGet: new Event(),
@@ -251,36 +249,6 @@ export class StateManager {
     // 
     // serial events
     // 
-    
-    // listener
-    onLoadState(callback) {
-        this.loadStateCallbacks.add(callback)
-        return this.loadStateCallbacks.size-1
-    }
-
-    // trigger
-    loadDataFromYaml(yamlString) {
-        let obj = yaml.parse(yamlString)
-        if (!(obj?.cells instanceof Array)) {
-            obj = {
-                cells: [],
-            }
-        }
-        for (const [key, value] of Object.entries(obj)) {
-            delete this.activeState[key]
-        }
-        Object.assign(this.activeState, obj)
-        this.prevState = structuredClone(this.activeState)
-        let returnVals = []
-        for (let each of new Set([...this.loadStateCallbacks, ...this.stateChangeCallbacks])) {
-            try {
-                returnVals.push(each(this.activeState))
-            } catch (error) {
-                console.error(error?.stack||error)
-            }
-        }
-        return returnVals
-    }
     
     // listener
     onStateChange(callback) {
