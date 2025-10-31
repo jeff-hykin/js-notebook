@@ -1,5 +1,6 @@
 Summary:
-    - There's a StateManager
+
+ - There's a StateManager
         - it can run on the backend (no direct connection to the UI)
         - it doesn't use any globals (multiple instances can be created)
         - the state of the whole notebook always equivalent to a yaml object (theme, cells, etc)
